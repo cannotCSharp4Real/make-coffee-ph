@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Shop Admin - Products</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: black;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 2rem;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .size-variants, .add-ons {
+            border: 1px solid #ddd;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+        .filter-section {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .status-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem;
+            border-radius: 4px;
+            display: none;
+            z-index: 1000;
+        }
+        .success {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .error {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Add status message div -->
+    <div id="statusMessage" class="status-message"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Product Management</h1>
+            <div>
+                <button class="btn btn-primary" onclick="openCreateModal()">Add New Product</button>
+                <button class="btn btn-danger" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <select id="typeFilter" onchange="loadProducts()">
+                <option value="">All Types</option>
+                <option value="drink">Drinks</option>
+                <option value="food">Food</option>
+            </select>
+            <select id="categoryFilter" onchange="loadProducts()">
+                <option value="">All Categories</option>
+                <!-- Categories will be populated based on type -->
+            </select>
+            <select id="availabilityFilter" onchange="loadProducts()">
+                <option value="">All Status</option>
+                <option value="true">Available</option>
+                <option value="false">Not Available</option>
+            </select>
+        </div>
+
+        <div id="productGrid" class="product-grid">
+            <!-- Products will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Create/Edit Product Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Add New Product</h2>
+            <form id="productForm" onsubmit="handleProductSubmit(event)">
+                <input type="hidden" id="productId">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="type">Type:</label>
+                    <select id="type" required onchange="updateCategoryOptions()">
+                        <option value="drink">Drink</option>
+                        <option value="food">Food</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="category">Category:</label>
+                    <select id="category" required>
+                        <!-- Categories will be populated based on type -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="available">Available:</label>
+                    <input type="checkbox" id="available" checked>
+                </div>
+
+                <!-- Drink-specific fields -->
+                <div id="drinkFields">
+                    <div class="size-variants">
+                        <h3>Size Variants</h3>
+                        <div id="sizeVariants">
+                            <!-- Size variants will be added here -->
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="addSizeVariant()">Add Size Variant</button>
+                    </div>
+
+                    <div class="add-ons">
+                        <h3>Add-ons</h3>
+                        <div id="addOns">
+                            <!-- Add-ons will be added here -->
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="addAddOn()">Add Add-on</button>
+                    </div>
+                </div>
+
+                <!-- Food-specific fields -->
+                <div id="foodFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="price">Price:</label>
+                        <input type="number" id="price" step="0.01" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Save Product</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Constants for categories
+        const CATEGORIES = {
+            drink: ['hot-coffee', 'iced-coffee', 'tea', 'frappe', 'smoothie'],
+            food: ['pastries', 'sandwiches', 'desserts', 'snacks']
+        };
+
+        // Utility function to show status messages
+        function showMessage(message, isError = false) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${isError ? 'error' : 'success'}`;
+            statusDiv.style.display = 'block';
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Check if user is admin
+        async function checkAdminAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return false;
+            }
+
+            try {
+                const response = await fetch('/api/auth/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const user = await response.json();
+                
+                if (user.role !== 'admin') {
+                    showMessage('Access denied. Admin privileges required.', true);
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 2000);
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('Auth error:', error);
+                window.location.href = '/login.html';
+                return false;
+            }
+        }
+
+        // Load products with error handling
+        async function loadProducts() {
+            if (!await checkAdminAuth()) return;
+            
+            const token = localStorage.getItem('token');
+            const type = document.getElementById('typeFilter').value;
+            const category = document.getElementById('categoryFilter').value;
+            const available = document.getElementById('availabilityFilter').value;
+
+            try {
+                let url = '/api/products?';
+                if (type) url += `type=${type}&`;
+                if (category) url += `category=${category}&`;
+                if (available !== '') url += `available=${available}`;
+
+                console.log('Fetching products from:', url); // Debug log
+
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                const products = await response.json();
+                console.log('Products loaded:', products); // Debug log
+                displayProducts(products);
+            } catch (error) {
+                console.error('Detailed error loading products:', error);
+                showMessage(`Error loading products: ${error.message}`, true);
+            }
+        }
+
+        // Display products in grid
+        function displayProducts(products) {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = '';
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <h3>${product.name}</h3>
+                    <p>Type: ${product.type}</p>
+                    <p>Category: ${product.category}</p>
+                    <p>Status: ${product.available ? 'Available' : 'Not Available'}</p>
+                    ${product.type === 'food' ? 
+                        `<p>Price: ₱${product.price}</p>` :
+                        `<p>Sizes: ${product.sizeVariants.map(v => `${v.size}: ₱${v.price}`).join(', ')}</p>`
+                    }
+                    <button class="btn btn-warning" onclick="editProduct('${product._id}')">Edit</button>
+                    <button class="btn btn-danger" onclick="deleteProduct('${product._id}')">Delete</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Modal functions
+        function openCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Product';
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('productModal').style.display = 'block';
+            updateCategoryOptions();
+            updateTypeFields();
+        }
+
+        function closeModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
+
+        // Update category options based on type
+        function updateCategoryOptions() {
+            const type = document.getElementById('type').value;
+            const categorySelect = document.getElementById('category');
+            categorySelect.innerHTML = '';
+
+            CATEGORIES[type].forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category.replace('-', ' ').toUpperCase();
+                categorySelect.appendChild(option);
+            });
+
+            updateTypeFields();
+        }
+
+        // Show/hide fields based on type
+        function updateTypeFields() {
+            const type = document.getElementById('type').value;
+            document.getElementById('drinkFields').style.display = type === 'drink' ? 'block' : 'none';
+            document.getElementById('foodFields').style.display = type === 'food' ? 'block' : 'none';
+        }
+
+        // Size variant and add-on management
+        function addSizeVariant() {
+            const container = document.createElement('div');
+            container.innerHTML = `
+                <select required>
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                </select>
+                <input type="number" step="0.01" min="0" required placeholder="Price">
+                <button type="button" onclick="this.parentElement.remove()">Remove</button>
+            `;
+            document.getElementById('sizeVariants').appendChild(container);
+        }
+
+        function addAddOn() {
+            const container = document.createElement('div');
+            container.innerHTML = `
+                <input type="text" required placeholder="Add-on name">
+                <input type="number" step="0.01" min="0" required placeholder="Price">
+                <input type="checkbox" checked> Available
+                <button type="button" onclick="this.parentElement.remove()">Remove</button>
+            `;
+            document.getElementById('addOns').appendChild(container);
+        }
+
+        // Handle form submission with improved error handling
+        async function handleProductSubmit(event) {
+            event.preventDefault();
+            if (!await checkAdminAuth()) return;
+            
+            const token = localStorage.getItem('token');
+            const productId = document.getElementById('productId').value;
+            const isEdit = !!productId;
+
+            try {
+                const productData = {
+                    name: document.getElementById('name').value,
+                    type: document.getElementById('type').value,
+                    category: document.getElementById('category').value,
+                    available: document.getElementById('available').checked
+                };
+
+                console.log('Submitting product data:', productData); // Debug log
+
+                if (productData.type === 'food') {
+                    const price = parseFloat(document.getElementById('price').value);
+                    if (isNaN(price) || price < 0) {
+                        throw new Error('Invalid price');
+                    }
+                    productData.price = price;
+                } else {
+                    // Validate size variants
+                    const sizeVariants = Array.from(document.getElementById('sizeVariants').children).map(div => {
+                        const price = parseFloat(div.querySelector('input[type="number"]').value);
+                        if (isNaN(price) || price < 0) {
+                            throw new Error('Invalid size variant price');
+                        }
+                        return {
+                            size: div.querySelector('select').value,
+                            price: price
+                        };
+                    });
+
+                    if (sizeVariants.length === 0) {
+                        throw new Error('At least one size variant is required for drinks');
+                    }
+                    productData.sizeVariants = sizeVariants;
+
+                    // Validate add-ons
+                    productData.addOns = Array.from(document.getElementById('addOns').children).map(div => {
+                        const price = parseFloat(div.querySelector('input[type="number"]').value);
+                        if (isNaN(price) || price < 0) {
+                            throw new Error('Invalid add-on price');
+                        }
+                        return {
+                            name: div.querySelector('input[type="text"]').value,
+                            price: price,
+                            available: div.querySelector('input[type="checkbox"]').checked
+                        };
+                    });
+                }
+
+                const url = isEdit ? `/api/products/${productId}` : '/api/products';
+                const method = isEdit ? 'PUT' : 'POST';
+
+                console.log(`${method} request to:`, url); // Debug log
+
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(productData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Server response:', result); // Debug log
+
+                showMessage(`Product ${isEdit ? 'updated' : 'created'} successfully`);
+                closeModal();
+                loadProducts();
+            } catch (error) {
+                console.error('Detailed error saving product:', error);
+                showMessage(`Error saving product: ${error.message}`, true);
+            }
+        }
+
+        // Edit product with error handling
+        async function editProduct(id) {
+            if (!await checkAdminAuth()) return;
+            
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`/api/products/${id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load product');
+                }
+
+                const product = await response.json();
+
+                document.getElementById('modalTitle').textContent = 'Edit Product';
+                document.getElementById('productId').value = product._id;
+                document.getElementById('name').value = product.name;
+                document.getElementById('type').value = product.type;
+                document.getElementById('available').checked = product.available;
+
+                updateCategoryOptions();
+                document.getElementById('category').value = product.category;
+                updateTypeFields();
+
+                if (product.type === 'food') {
+                    document.getElementById('price').value = product.price;
+                } else {
+                    document.getElementById('sizeVariants').innerHTML = '';
+                    product.sizeVariants.forEach(() => addSizeVariant());
+                    const sizeVariantDivs = document.getElementById('sizeVariants').children;
+                    product.sizeVariants.forEach((variant, index) => {
+                        const div = sizeVariantDivs[index];
+                        div.querySelector('select').value = variant.size;
+                        div.querySelector('input[type="number"]').value = variant.price;
+                    });
+
+                    document.getElementById('addOns').innerHTML = '';
+                    product.addOns.forEach(() => addAddOn());
+                    const addOnDivs = document.getElementById('addOns').children;
+                    product.addOns.forEach((addOn, index) => {
+                        const div = addOnDivs[index];
+                        div.querySelector('input[type="text"]').value = addOn.name;
+                        div.querySelector('input[type="number"]').value = addOn.price;
+                        div.querySelector('input[type="checkbox"]').checked = addOn.available;
+                    });
+                }
+
+                document.getElementById('productModal').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading product:', error);
+                showMessage('Error loading product', true);
+            }
+        }
+
+        // Delete product with confirmation and error handling
+        async function deleteProduct(id) {
+            if (!await checkAdminAuth()) return;
+            
+            if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`/api/products/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to delete product');
+                }
+
+                showMessage('Product deleted successfully');
+                loadProducts();
+            } catch (error) {
+                console.error('Error deleting product:', error);
+                showMessage(error.message || 'Error deleting product', true);
+            }
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+        }
+
+        // Initialize page with admin check
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (await checkAdminAuth()) {
+                updateCategoryOptions();
+                loadProducts();
+            }
+        });
+    </script>
+</body>
+</html> 
