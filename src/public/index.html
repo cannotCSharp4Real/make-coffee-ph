@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Shop</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* Menu Section Styles */
+        .menu-section {
+            padding: 2rem;
+            background-color: #f9f9f9;
+            min-height: calc(100vh - 80px); /* Account for header height */
+        }
+
+        .menu-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .menu-filters {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #4a3425;
+            background: transparent;
+            color: #4a3425;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: #4a3425;
+            color: white;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .menu-item {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .menu-item-image {
+            width: 100%;
+            height: 200px;
+            background: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+
+        .menu-item-content {
+            padding: 1.5rem;
+        }
+
+        .menu-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .menu-item-title {
+            font-size: 1.25rem;
+            color: #4a3425;
+            margin: 0;
+        }
+
+        .menu-item-category {
+            font-size: 0.875rem;
+            color: #666;
+            text-transform: capitalize;
+        }
+
+        .menu-item-prices {
+            margin-top: 1rem;
+        }
+
+        .size-variant {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .add-ons {
+            margin-top: 1rem;
+            border-top: 1px solid #eee;
+            padding-top: 1rem;
+        }
+
+        .add-on-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.25rem;
+            color: #666;
+        }
+
+        /* No Results State */
+        .no-results {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo">Coffee Shop</a>
+            <div class="auth-buttons">
+                <button class="button button-secondary" onclick="openModal('loginModal')">Sign In</button>
+                <button class="button button-primary" onclick="openModal('registerModal')">Register</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Menu Section -->
+    <section id="menu" class="menu-section">
+        <div class="menu-container">
+            <h2>Our Menu</h2>
+            <div class="menu-filters">
+                <button class="filter-btn active" data-type="all">All</button>
+                <button class="filter-btn" data-type="drink">Drinks</button>
+                <button class="filter-btn" data-type="food">Food</button>
+            </div>
+            <div id="menuGrid" class="menu-grid">
+                <!-- Menu items will be populated here -->
+                <div class="loading">Loading menu items...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>Register</h2>
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" name="password" required>
+                </div>
+                <div class="error-message" id="registerError"></div>
+                <button type="submit" class="button button-primary">Register</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>Sign In</h2>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <div class="error-message" id="loginError"></div>
+                <button type="submit" class="button button-primary">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/auth.js"></script>
+    <script src="/js/products.js"></script>
+    <script>
+        // Keep existing menu-related JavaScript
+        let menuItems = [];
+        let currentFilter = 'all';
+        
+        // ... (keep all the existing menu functions)
+
+        // Add this function to check authentication status
+        function checkAuthStatus() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                // Make a request to verify the token and get user info
+                fetch('/api/auth/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => response.json())
+                .then(user => {
+                    // Update the auth buttons based on user status
+                    const authButtons = document.querySelector('.auth-buttons');
+                    if (user.role === 'admin') {
+                        authButtons.innerHTML = `
+                            <button class="button button-secondary" onclick="location.href='/admin.html'">Admin Dashboard</button>
+                            <button class="button button-primary" onclick="handleLogout()">Logout</button>
+                        `;
+                    } else {
+                        authButtons.innerHTML = `
+                            <button class="button button-primary" onclick="handleLogout()">Logout</button>
+                        `;
+                    }
+                })
+                .catch(() => {
+                    // If token is invalid, remove it
+                    localStorage.removeItem('token');
+                });
+            }
+        }
+
+        // Add logout function
+        function handleLogout() {
+            localStorage.removeItem('token');
+            window.location.reload();
+        }
+
+        // Check auth status when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMenuItems();
+            checkAuthStatus();
+        });
+    </script>
+</body>
+</html>

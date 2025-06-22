@@ -13,4 +13,7 @@ router.post('/', auth, adminAuth, productController.createProduct);
 router.put('/:id', auth, adminAuth, productController.updateProduct);
 router.delete('/:id', auth, adminAuth, productController.deleteProduct);
 
+// Add this new route in src/routes/products.js
+router.get('/events', productController.handleSSE);
+
 module.exports = router; 
