@@ -21,6 +21,12 @@ async function handleRegister(event) {
     const errorDiv = document.getElementById('registerError');
     
     try {
+        // Validate input
+        if (!form.email.value || !form.password.value) {
+            errorDiv.textContent = 'Email and password are required';
+            return;
+        }
+
         const response = await fetch('/api/auth/register', {
             method: 'POST',
             headers: {
@@ -39,15 +45,13 @@ async function handleRegister(event) {
             throw new Error(data.message || 'Registration failed');
         }
 
-        // Store the token
-        localStorage.setItem('token', data.token);
-        
-        // Close modal and redirect to dashboard or refresh page
+        updateAuthState(data);
         closeModal('registerModal');
-        window.location.reload();
         
     } catch (error) {
+        errorDiv.style.color = 'red';
         errorDiv.textContent = error.message;
+        console.error('Registration error:', error);
     }
 }
 
@@ -75,13 +79,10 @@ async function handleLogin(event) {
             throw new Error(data.message || 'Login failed');
         }
 
-        // Store the token
-        localStorage.setItem('token', data.token);
-        
-        // Close modal
+        updateAuthState(data);
         closeModal('loginModal');
 
-        // Check user role and redirect accordingly
+        // For admin users, redirect to admin page
         if (data.user.role === 'admin') {
             window.location.href = '/admin.html';
         } else {
@@ -91,4 +92,11 @@ async function handleLogin(event) {
     } catch (error) {
         errorDiv.textContent = error.message;
     }
+}
+
+// Add to src/public/js/auth.js after successful login/register
+function updateAuthState(userData) {
+    localStorage.setItem('token', userData.token);
+    localStorage.setItem('userRole', userData.user.role);
+    updateHeaderState(); // Update header state after login/register
 }

@@ -1,0 +1,68 @@
+// Function to check authentication status and update header
+function updateHeaderState() {
+    const token = localStorage.getItem('token');
+    const authButtons = document.getElementById('authButtons');
+    const userButtons = document.getElementById('userButtons');
+    
+    if (token) {
+        // Hide auth buttons and show user buttons
+        authButtons.style.display = 'none';
+        userButtons.style.display = 'flex';
+    } else {
+        // Show auth buttons and hide user buttons
+        authButtons.style.display = 'flex';
+        userButtons.style.display = 'none';
+    }
+}
+
+// Toggle profile dropdown
+function setupProfileDropdown() {
+    const profileButton = document.getElementById('profileButton');
+    const profileDropdown = document.getElementById('profileDropdown');
+    
+    profileButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profileDropdown.classList.toggle('show');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!profileDropdown.contains(e.target)) {
+            profileDropdown.classList.remove('show');
+        }
+    });
+}
+
+// Handle logout
+function handleLogout() {
+    localStorage.removeItem('token');
+    window.location.reload();
+}
+
+// View profile function
+function viewProfile() {
+    // Implement profile view functionality
+    console.log('View profile clicked');
+}
+
+// View orders function
+function viewOrders() {
+    // Implement orders view functionality
+    console.log('View orders clicked');
+}
+
+// Cart button click handler
+function setupCartButton() {
+    const cartButton = document.getElementById('cartButton');
+    cartButton.addEventListener('click', () => {
+        // Implement cart functionality
+        console.log('Cart clicked');
+    });
+}
+
+// Initialize header functionality
+document.addEventListener('DOMContentLoaded', () => {
+    updateHeaderState();
+    setupProfileDropdown();
+    setupCartButton();
+});

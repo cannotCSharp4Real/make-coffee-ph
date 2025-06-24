@@ -6,35 +6,44 @@ const authController = {
   // Register a new user
   register: async (req, res) => {
     try {
-      const {email, password, role } = req.body;
+      const { email, password, username } = req.body;
 
-      // Check if user already exists - FIXED: Changed user to User
-      const existingUser = await User.findOne({ 
-        $or: [{ email }] 
-      });
+      // Validate required fields
+      if (!email || !password) {
+        return res.status(400).json({ 
+          message: 'Email and password are required' 
+        });
+      }
+
+      // Check if user already exists
+      const existingUser = await User.findOne({ email });
       
       if (existingUser) {
         return res.status(400).json({ 
-          message: 'User with this email or username already exists' 
+          message: 'User with this email already exists' 
         });
       }
 
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create new user - FIXED: Changed user to User and renamed variable
+      // Create new user
       const newUser = new User({
         email,
         password: hashedPassword,
-        role: role || 'customer' // Default to customer if role not specified
+        username, // Add username if provided
+        role: 'customer' // Default to customer role
       });
 
       await newUser.save();
 
       // Generate JWT token
       const token = jwt.sign(
-        { userId: newUser._id, role: newUser.role },
-        process.env.JWT_SECRET,
+        { 
+          userId: newUser._id, 
+          role: newUser.role 
+        },
+        process.env.JWT_SECRET || 'fallback-secret-key', // Add fallback secret key
         { expiresIn: '24h' }
       );
 
@@ -44,12 +53,17 @@ const authController = {
         user: {
           id: newUser._id,
           email: newUser.email,
+          username: newUser.username,
           role: newUser.role
         }
       });
 
     } catch (error) {
-      res.status(500).json({ message: 'Server error', error: error.message });
+      console.error('Registration error:', error); // Add detailed error logging
+      res.status(500).json({ 
+        message: 'Server error during registration', 
+        error: error.message 
+      });
     }
   },
 
