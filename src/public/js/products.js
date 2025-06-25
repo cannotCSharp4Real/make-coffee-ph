@@ -40,6 +40,32 @@ const createProductHTML = (product) => {
         `;
     }
 
+    let addToCartButton = '';
+    if (product.type === 'food') {
+        addToCartButton = `
+            <button class="add-to-cart-btn" onclick="addToCart('${product._id}', '${product.name}', ${product.price}, 'food')">
+                Add to Cart
+            </button>
+        `;
+    } else {
+        const sizeOptions = product.sizeVariants.map(variant => `
+            <option value="${variant.size}" data-price="${variant.price}">
+                ${variant.size.charAt(0).toUpperCase() + variant.size.slice(1)} - ${formatPrice(variant.price)}
+            </option>
+        `).join('');
+
+        addToCartButton = `
+            <div class="drink-options">
+                <select class="size-select" id="size-${product._id}">
+                    ${sizeOptions}
+                </select>
+                <button class="add-to-cart-btn" onclick="handleAddDrinkToCart('${product._id}', '${product.name}')">
+                    Add to Cart
+                </button>
+            </div>
+        `;
+    }
+
     return `
         <div class="menu-item" data-type="${product.type}" data-category="${product.category}">
             <div class="menu-item-image">
@@ -55,6 +81,9 @@ const createProductHTML = (product) => {
                     ${priceHTML}
                 </div>
                 ${addOnsHTML}
+            </div>
+            <div class="menu-item-actions">
+                ${addToCartButton}
             </div>
         </div>
     `;
@@ -134,3 +163,11 @@ const setupRealtimeUpdates = () => {
 
 // Start real-time updates
 setupRealtimeUpdates();
+
+// Add function to handle adding drinks to cart
+function handleAddDrinkToCart(productId, productName) {
+    const sizeSelect = document.getElementById(`size-${productId}`);
+    const size = sizeSelect.value;
+    const price = parseFloat(sizeSelect.selectedOptions[0].dataset.price);
+    addToCart(productId, productName, price, 'drink', size);
+}

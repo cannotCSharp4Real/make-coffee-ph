@@ -55,8 +55,7 @@ function viewOrders() {
 function setupCartButton() {
     const cartButton = document.getElementById('cartButton');
     cartButton.addEventListener('click', () => {
-        // Implement cart functionality
-        console.log('Cart clicked');
+        window.location.href = '/cart.html';
     });
 }
 

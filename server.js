@@ -27,6 +27,9 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/coffee-sh
 // Routes
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/products', require('./src/routes/products'));
+app.use('/api/cart', require('./src/routes/cart'));
+app.use('/api/orders', require('./src/routes/orders'));
+app.use('/api/admin', require('./src/routes/admin'));
 
 // Global error handler
 app.use((err, req, res, next) => {

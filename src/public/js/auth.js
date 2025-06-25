@@ -46,7 +46,7 @@ async function handleRegister(event) {
         }
 
         updateAuthState(data);
-        closeModal('registerModal');
+            closeModal('registerModal');
         
     } catch (error) {
         errorDiv.style.color = 'red';

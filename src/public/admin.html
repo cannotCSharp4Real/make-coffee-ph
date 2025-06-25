@@ -7,503 +7,545 @@
     <link rel="stylesheet" href="/css/styles.css">
     <style>
         .admin-dashboard {
-            padding-top: 80px;
-            min-height: 100vh;
-            background-color: #f5f5f5;
-        }
-        
-        .admin-content {
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
         }
-        
-        .welcome-message {
-            font-size: 2rem;
-            color: #4a3425;
-            margin-bottom: 2rem;
-        }
-        
-        .admin-header {
+
+        .dashboard-nav {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            gap: 1rem;
             margin-bottom: 2rem;
         }
-        
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
-            margin-top: 2rem;
+
+        .nav-tab {
+            padding: 0.5rem 1rem;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
         }
-        
-        .product-card {
+
+        .nav-tab.active {
+            background: #4a3425;
+            color: white;
+        }
+
+        .dashboard-section {
+            display: none;
+        }
+
+        .dashboard-section.active {
+            display: block;
+        }
+
+        .order-list, .user-list {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .order-item, .user-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            display: grid;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .order-item {
+            grid-template-columns: 1fr 2fr 1fr 1fr 1fr;
+        }
+
+        .user-item {
+            grid-template-columns: 2fr 1fr 1fr auto;
+        }
+
+        .status-select {
+            padding: 0.25rem;
+            border-radius: 4px;
+        }
+
+        .report-filters {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .report-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
             background: white;
             padding: 1rem;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
-        .product-form {
+
+        .summary-card h3 {
+            margin: 0 0 0.5rem 0;
+            color: #666;
+        }
+
+        .summary-card .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4a3425;
+        }
+
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .product-card {
             background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem;
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .product-title {
+            margin: 0;
+            color: #4a3425;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .product-details {
+            margin-bottom: 1rem;
+        }
+
+        .price-list {
+            margin-top: 0.5rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 10% auto;
             padding: 2rem;
             border-radius: 8px;
-            margin-bottom: 2rem;
+            max-width: 500px;
+            position: relative;
         }
-        
+
+        .modal-close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
         .form-group {
             margin-bottom: 1rem;
         }
-        
+
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
-            font-weight: bold;
         }
-        
-        .form-group input, .form-group select {
+
+        .form-group input,
+        .form-group select {
             width: 100%;
             padding: 0.5rem;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        
-        .size-variants, .add-ons {
-            border: 1px solid #ddd;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 4px;
+
+        .size-variants {
+            display: grid;
+            gap: 0.5rem;
         }
-        
-        .variant-item, .addon-item {
-            display: flex;
-            gap: 1rem;
+
+        .size-variant {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .addon-item {
+            display: grid;
+            grid-template-columns: 1fr 100px auto;
+            gap: 0.5rem;
             margin-bottom: 0.5rem;
         }
-        
-        .btn {
-            padding: 0.5rem 1rem;
+
+        .addon-item button {
+            padding: 0.25rem 0.5rem;
+            background: #dc3545;
+            color: white;
+            border: none;
             border-radius: 4px;
             cursor: pointer;
+        }
+
+        /* Product Management Styles */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .filters select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-width: 150px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .product-title {
+            margin: 0;
+            font-size: 1.25rem;
+            color: #4a3425;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .product-details {
+            color: #666;
+        }
+
+        .product-details > div {
+            margin-bottom: 0.5rem;
+        }
+
+        .price-list {
+            margin-top: 1rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 600px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .close {
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .size-variant {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .addon-item {
+            display: grid;
+            grid-template-columns: 1fr 120px auto;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
             border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
         }
-        
-        .btn-primary {
-            background-color: #4a3425;
+
+        .button-primary {
+            background: #4a3425;
             color: white;
         }
-        
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
+
+        .button-secondary {
+            background: #f5f5f5;
+            color: #4a3425;
         }
-        
-        .btn-secondary {
-            background-color: #6c757d;
+
+        .button-danger {
+            background: #dc3545;
             color: white;
-        }
-        
-        .error-message {
-            color: #dc3545;
-            margin-top: 0.5rem;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
         <nav class="nav">
             <a href="/admin.html" class="logo">Coffee Shop Admin</a>
-            <button class="btn btn-danger" onclick="handleLogout()">Logout</button>
+            <button onclick="handleLogout()" class="button button-secondary">Logout</button>
         </nav>
     </header>
 
-    <!-- Admin Dashboard -->
-    <main class="admin-dashboard">
-        <div class="admin-content">
-            <div class="admin-header">
-                <h1 class="welcome-message">Hi, Admin!</h1>
-                <button class="btn btn-primary" onclick="toggleProductForm()">Add New Product</button>
-            </div>
+    <div class="admin-dashboard">
+        <div class="dashboard-nav">
+            <button class="nav-tab active" onclick="showSection('orders')">Orders</button>
+            <button class="nav-tab" onclick="showSection('users')">Users</button>
+            <button class="nav-tab" onclick="showSection('reports')">Sales Report</button>
+            <button class="nav-tab" onclick="showSection('products')">Products</button>
+        </div>
 
-            <!-- Product Form -->
-            <div id="productForm" class="product-form" style="display: none;">
-                <h2 id="formTitle">Add New Product</h2>
-                <form id="productManageForm" onsubmit="handleProductSubmit(event)">
-                    <input type="hidden" id="productId">
-                    <div class="form-group">
-                        <label for="name">Product Name</label>
-                        <input type="text" id="name" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="type">Type</label>
-                        <select id="type" required onchange="handleTypeChange()">
-                            <option value="drink">Drink</option>
-                            <option value="food">Food</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="category">Category</label>
-                        <select id="category" required>
-                            <!-- Options will be populated by JavaScript -->
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="available" checked>
-                            Available
-                        </label>
-                    </div>
-                    
-                    <!-- Food Price (shown only for food items) -->
-                    <div id="foodPriceSection" class="form-group" style="display: none;">
-                        <label for="price">Price</label>
-                        <input type="number" id="price" min="0" step="0.01">
-                    </div>
-                    
-                    <!-- Drink Specific Fields -->
-                    <div id="drinkFields">
-                        <!-- Size Variants -->
-                        <div class="size-variants">
-                            <h3>Size Variants</h3>
-                            <div id="sizeVariants"></div>
-                            <button type="button" class="btn btn-secondary" onclick="addSizeVariant()">Add Size Variant</button>
-                        </div>
-                        
-                        <!-- Add-ons -->
-                        <div class="add-ons">
-                            <h3>Add-ons (Optional)</h3>
-                            <div id="addOns"></div>
-                            <button type="button" class="btn btn-secondary" onclick="addAddon()">Add Add-on</button>
-                        </div>
-                    </div>
-                    
-                    <div class="error-message" id="formError"></div>
-                    
-                    <button type="submit" class="btn btn-primary">Save Product</button>
-                    <button type="button" class="btn btn-secondary" onclick="toggleProductForm()">Cancel</button>
-                </form>
+        <!-- Orders Section -->
+        <div id="ordersSection" class="dashboard-section active">
+            <h2>Order Management</h2>
+            <div class="filters">
+                <select id="orderStatusFilter" onchange="loadOrders()">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="preparing">Preparing</option>
+                    <option value="ready">Ready</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="completed">Completed</option>
+                </select>
+                <input type="date" id="orderDateFilter" onchange="loadOrders()">
             </div>
-
-            <!-- Products List -->
-            <div id="productsList" class="product-grid">
-                <!-- Products will be populated here -->
+            <div id="orderList" class="order-list">
+                <!-- Orders will be loaded here -->
             </div>
         </div>
-    </main>
 
-    <script>
-        // Category options based on type
-        const categories = {
-            drink: ['hot-coffee', 'iced-coffee', 'tea', 'frappe', 'smoothie'],
-            food: ['pastries', 'sandwiches', 'desserts', 'snacks']
-        };
-        
-        let token = localStorage.getItem('token');
-        
-        // Check authentication and admin role
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (!token) {
-                window.location.href = '/';
-                return;
-            }
+        <!-- Users Section -->
+        <div id="usersSection" class="dashboard-section">
+            <h2>User Management</h2>
+            <div id="userList" class="user-list">
+                <!-- Users will be loaded here -->
+            </div>
+        </div>
 
-            try {
-                const response = await fetch('/api/auth/profile', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Authentication failed');
-                }
+        <!-- Reports Section -->
+        <div id="reportsSection" class="dashboard-section">
+            <h2>Sales Report</h2>
+            <div class="report-filters">
+                <input type="date" id="reportStartDate">
+                <input type="date" id="reportEndDate">
+                <button onclick="generateReport()">Generate Report</button>
+            </div>
+            <div id="reportSummary" class="report-summary">
+                <!-- Report summary will be loaded here -->
+            </div>
+            <div id="reportDetails">
+                <!-- Detailed report will be loaded here -->
+            </div>
+        </div>
 
-                const user = await response.json();
-                if (user.role !== 'admin') {
-                    window.location.href = '/';
-                    return;
-                }
-                
-                document.querySelector('.welcome-message').textContent = `Hi, ${user.username}!`;
-                loadProducts();
-                
-            } catch (error) {
-                console.error('Auth error:', error);
-                window.location.href = '/';
-            }
-        });
-
-        // Load products
-        async function loadProducts() {
-            try {
-                const response = await fetch('/api/products', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const products = await response.json();
-                displayProducts(products);
-            } catch (error) {
-                console.error('Error loading products:', error);
-            }
-        }
-
-        // Display products
-        function displayProducts(products) {
-            const productsDiv = document.getElementById('productsList');
-            productsDiv.innerHTML = products.map(product => `
-                <div class="product-card">
-                    <h3>${product.name}</h3>
-                    <p>Type: ${product.type}</p>
-                    <p>Category: ${product.category}</p>
-                    <p>Available: ${product.available ? 'Yes' : 'No'}</p>
-                    ${product.type === 'food' ? 
-                        `<p>Price: ₱${product.price}</p>` :
-                        `<p>Sizes: ${product.sizeVariants.map(v => `${v.size}: $${v.price}`).join(', ')}</p>`
-                    }
-                    <button class="btn btn-secondary" onclick="editProduct('${product._id}')">Edit</button>
-                    <button class="btn btn-danger" onclick="deleteProduct('${product._id}')">Delete</button>
-                </div>
-            `).join('');
-        }
-
-        // Handle type change
-        function handleTypeChange() {
-            const type = document.getElementById('type').value;
-            const categorySelect = document.getElementById('category');
-            const foodPriceSection = document.getElementById('foodPriceSection');
-            const drinkFields = document.getElementById('drinkFields');
+        <!-- Products Section -->
+        <div id="productsSection" class="dashboard-section">
+            <div class="section-header">
+                <h2>Product Management</h2>
+                <button class="button button-primary" onclick="openProductModal()">Add New Product</button>
+            </div>
             
-            // Update category options
-            categorySelect.innerHTML = categories[type]
-                .map(cat => `<option value="${cat}">${cat}</option>`)
-                .join('');
-            
-            // Show/hide type-specific fields
-            if (type === 'food') {
-                foodPriceSection.style.display = 'block';
-                drinkFields.style.display = 'none';
-            } else {
-                foodPriceSection.style.display = 'none';
-                drinkFields.style.display = 'block';
-            }
-        }
-
-        // Size variants management
-        function addSizeVariant() {
-            const container = document.getElementById('sizeVariants');
-            const div = document.createElement('div');
-            div.className = 'variant-item';
-            div.innerHTML = `
-                <select required>
-                    <option value="small">Small</option>
-                    <option value="medium">Medium</option>
-                    <option value="large">Large</option>
+            <div class="filters">
+                <select id="productTypeFilter" onchange="filterProducts()">
+                    <option value="all">All Types</option>
+                    <option value="food">Food</option>
+                    <option value="drink">Drinks</option>
                 </select>
-                <input type="number" min="0" step="0.01" placeholder="Price" required>
-                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">Remove</button>
-            `;
-            container.appendChild(div);
-        }
+                <select id="productCategoryFilter" onchange="filterProducts()">
+                    <option value="all">All Categories</option>
+                    <option value="hot-coffee">Hot Coffee</option>
+                    <option value="iced-coffee">Iced Coffee</option>
+                    <option value="tea">Tea</option>
+                    <option value="frappe">Frappe</option>
+                    <option value="smoothie">Smoothie</option>
+                    <option value="pastries">Pastries</option>
+                    <option value="sandwiches">Sandwiches</option>
+                    <option value="desserts">Desserts</option>
+                    <option value="snacks">Snacks</option>
+                </select>
+            </div>
 
-        // Add-ons management
-        function addAddon() {
-            const container = document.getElementById('addOns');
-            const div = document.createElement('div');
-            div.className = 'addon-item';
-            div.innerHTML = `
-                <input type="text" placeholder="Add-on name" required>
-                <input type="number" min="0" step="0.01" placeholder="Price" required>
-                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">Remove</button>
-            `;
-            container.appendChild(div);
-        }
+            <div id="productList" class="product-grid">
+                <!-- Products will be loaded here -->
+            </div>
+        </div>
+    </div>
 
-        // Toggle product form
-        function toggleProductForm() {
-            const form = document.getElementById('productForm');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
-            document.getElementById('productManageForm').reset();
-            document.getElementById('formTitle').textContent = 'Add New Product';
-            document.getElementById('productId').value = '';
-        }
-
-        // Handle product submission
-async function handleProductSubmit(event) {
-    event.preventDefault();
-    const formError = document.getElementById('formError');
-    formError.textContent = ''; // Clear previous errors
-    
-    try {
-        const productData = {
-            name: document.getElementById('name').value,
-            type: document.getElementById('type').value,
-            category: document.getElementById('category').value,
-            available: document.getElementById('available').checked
-        };
-
-        // Validate price for food items
-        if (productData.type === 'food') {
-            const price = parseFloat(document.getElementById('price').value);
-            if (isNaN(price) || price < 0) {
-                throw new Error('Please enter a valid price');
-            }
-            productData.price = price;
-        } else {
-            // Validate size variants for drinks
-            const sizeVariants = Array.from(document.getElementById('sizeVariants').children)
-                .map(div => ({
-                    size: div.querySelector('select').value,
-                    price: parseFloat(div.querySelector('input').value)
-                }));
-
-            if (sizeVariants.length === 0) {
-                throw new Error('Drinks must have at least one size variant');
-            }
-
-            if (sizeVariants.some(v => isNaN(v.price) || v.price < 0)) {
-                throw new Error('Please enter valid prices for all size variants');
-            }
-
-            productData.sizeVariants = sizeVariants;
-            
-            // Add optional add-ons
-            const addOns = Array.from(document.getElementById('addOns').children)
-                .map(div => ({
-                    name: div.querySelector('input[type="text"]').value,
-                    price: parseFloat(div.querySelector('input[type="number"]').value),
-                    available: true
-                }))
-                .filter(addon => addon.name && !isNaN(addon.price));
-
-            if (addOns.length > 0) {
-                productData.addOns = addOns;
-            }
-        }
-
-        const productId = document.getElementById('productId').value;
-        const url = productId ? `/api/products/${productId}` : '/api/products';
-        
-        const response = await fetch(url, {
-            method: productId ? 'PUT' : 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(productData)
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error?.message || data.message || 'Failed to save product');
-        }
-
-        toggleProductForm();
-        loadProducts();
-        
-    } catch (error) {
-        formError.textContent = error.message;
-        formError.style.display = 'block';
-        console.error('Error saving product:', error);
-    }
-}
-
-        // Edit product
-        async function editProduct(id) {
-            try {
-                const response = await fetch(`/api/products/${id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const product = await response.json();
+    <!-- Product Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Product</h2>
+                <span class="close" onclick="closeProductModal()">&times;</span>
+            </div>
+            <form id="productForm" onsubmit="handleProductSubmit(event)">
+                <input type="hidden" id="productId">
                 
-                document.getElementById('productId').value = product._id;
-                document.getElementById('name').value = product.name;
-                document.getElementById('type').value = product.type;
-                handleTypeChange();
-                document.getElementById('category').value = product.category;
-                document.getElementById('available').checked = product.available;
-                
-                if (product.type === 'food') {
-                    document.getElementById('price').value = product.price;
-                } else {
-                    document.getElementById('sizeVariants').innerHTML = '';
-                    product.sizeVariants.forEach(variant => {
-                        const div = document.createElement('div');
-                        div.className = 'variant-item';
-                        div.innerHTML = `
-                            <select required>
-                                <option value="small" ${variant.size === 'small' ? 'selected' : ''}>Small</option>
-                                <option value="medium" ${variant.size === 'medium' ? 'selected' : ''}>Medium</option>
-                                <option value="large" ${variant.size === 'large' ? 'selected' : ''}>Large</option>
-                            </select>
-                            <input type="number" min="0" step="0.01" value="${variant.price}" required>
-                            <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">Remove</button>
-                        `;
-                        document.getElementById('sizeVariants').appendChild(div);
-                    });
-                    
-                    document.getElementById('addOns').innerHTML = '';
-                    if (product.addOns) {
-                        product.addOns.forEach(addon => {
-                            const div = document.createElement('div');
-                            div.className = 'addon-item';
-                            div.innerHTML = `
-                                <input type="text" value="${addon.name}" required>
-                                <input type="number" min="0" step="0.01" value="${addon.price}" required>
-                                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">Remove</button>
-                            `;
-                            document.getElementById('addOns').appendChild(div);
-                        });
-                    }
-                }
-                
-                document.getElementById('formTitle').textContent = 'Edit Product';
-                document.getElementById('productForm').style.display = 'block';
-            } catch (error) {
-                console.error('Error loading product:', error);
-            }
-        }
+                <div class="form-group">
+                    <label for="productName">Product Name:</label>
+                    <input type="text" id="productName" name="name" required>
+                </div>
 
-        // Delete product
-        async function deleteProduct(id) {
-            if (!confirm('Are you sure you want to delete this product?')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/api/products/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                <div class="form-group">
+                    <label for="productType">Type:</label>
+                    <select id="productType" name="type" onchange="handleTypeChange()" required>
+                        <option value="food">Food</option>
+                        <option value="drink">Drink</option>
+                    </select>
+                </div>
 
-                if (!response.ok) {
-                    throw new Error('Failed to delete product');
-                }
+                <div class="form-group">
+                    <label for="productCategory">Category:</label>
+                    <select id="productCategory" name="category" required>
+                        <!-- Options will be populated based on type -->
+                    </select>
+                </div>
 
-                loadProducts();
-            } catch (error) {
-                console.error('Error deleting product:', error);
-            }
-        }
+                <div id="foodPriceSection" class="form-group">
+                    <label for="productPrice">Price:</label>
+                    <input type="number" id="productPrice" name="price" min="0" step="0.01">
+                </div>
 
-        // Handle logout
-        function handleLogout() {
-            localStorage.removeItem('token');
-            window.location.href = '../index.html';
-        }
+                <div id="drinkPriceSection" class="form-group" style="display: none;">
+                    <label>Size Variants:</label>
+                    <div class="size-variant">
+                        <label>Small:</label>
+                        <input type="number" id="smallPrice" min="0" step="0.01">
+                    </div>
+                    <div class="size-variant">
+                        <label>Medium:</label>
+                        <input type="number" id="mediumPrice" min="0" step="0.01">
+                    </div>
+                    <div class="size-variant">
+                        <label>Large:</label>
+                        <input type="number" id="largePrice" min="0" step="0.01">
+                    </div>
+                </div>
 
-        // Initialize the form
-        handleTypeChange();
-    </script>
+                <div id="addOnsSection" class="form-group" style="display: none;">
+                    <label>Add-ons:</label>
+                    <div id="addOnsList"></div>
+                    <button type="button" class="button button-secondary" onclick="addAddon()">Add Add-on</button>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="productAvailable" name="available" checked>
+                        Available
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="button button-primary">Save Product</button>
+                    <button type="button" class="button button-secondary" onclick="closeProductModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/admin.js"></script>
+    <script src="/js/product-management.js"></script>
 </body>
 </html>
