@@ -2,9 +2,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const http = require('http');
 require('dotenv').config();
 
 const app = express();
+const server = http.createServer(app);
 
 // Middleware
 app.use(cors());
@@ -14,29 +16,54 @@ app.use(express.json());
 app.use(express.static('src/public'));
 
 // MongoDB connection with detailed error logging
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/coffee-shop', {
+mongoose.connect('mongodb://127.0.0.1:27017/coffee-shop', {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => {
-    console.error('MongoDB connection error:', err);
-    console.error('MONGODB_URI:', process.env.MONGODB_URI);
+.then(() => {
+    console.log('Connected to MongoDB successfully');
+})
+.catch((error) => {
+    console.error('MongoDB connection error:', error);
+});
+
+mongoose.connection.on('error', (error) => {
+    console.error('MongoDB connection error:', error);
+});
+
+// Add this after your mongoose.connect call
+mongoose.connection.once('open', async () => {
+    try {
+        // Initialize the order number counter if it doesn't exist
+        const Counter = require('./src/models/counter');
+        await Counter.findOneAndUpdate(
+            { _id: 'orderNumber' },
+            {},
+            { upsert: true }
+        );
+        console.log('Order number counter initialized successfully');
+    } catch (error) {
+        console.error('Error initializing order number counter:', error);
+    }
 });
 
 // Routes
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/products', require('./src/routes/products'));
 app.use('/api/cart', require('./src/routes/cart'));
-app.use('/api/orders', require('./src/routes/orders'));
+const orderRoutes = require('./src/routes/orders');
+app.use('/api/orders', orderRoutes);
 app.use('/api/admin', require('./src/routes/admin'));
 
 // Global error handler
 app.use((err, req, res, next) => {
-    console.error('Error details:', err);
-    res.status(500).json({
-        message: 'Server error',
-        error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    console.error('Global error handler:', err);
+    res.status(err.status || 500).json({
+        message: err.message || 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? {
+            message: err.message,
+            stack: err.stack
+        } : {}
     });
 });
 
@@ -51,7 +78,7 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`MongoDB URI: ${process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/coffee-shop'}`);
     console.log(`Visit http://localhost:${PORT} to access the application`);

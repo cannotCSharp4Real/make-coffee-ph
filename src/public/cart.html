@@ -170,6 +170,62 @@
             padding: 2rem;
             color: #dc3545;
         }
+
+        .order-confirmation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .order-confirmation {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .cancellation-timer {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .cancel-order-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        .cancel-order-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .close-confirmation-btn {
+            background: #4a3425;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -199,50 +255,45 @@
     <template id="cartTemplate">
         <div class="cart-container">
             <div class="cart-items">
-                <!-- Cart items will be inserted here -->
+                <!-- Cart items will be populated here -->
             </div>
+            
             <div class="cart-summary">
                 <div class="summary-row">
                     <span>Subtotal:</span>
                     <span class="subtotal">₱0.00</span>
                 </div>
-                <div class="delivery-options">
-                    <div class="option-group">
-                        <label>Delivery Method:</label>
-                        <div class="radio-group">
-                            <label class="radio-option">
-                                <input type="radio" name="deliveryMethod" value="delivery" checked>
-                                <span>Delivery</span>
-                            </label>
-                            <label class="radio-option">
-                                <input type="radio" name="deliveryMethod" value="pickup">
-                                <span>Pick Up</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div id="deliveryAddressGroup" class="option-group">
-                        <label for="deliveryAddress">Delivery Address:</label>
-                        <textarea id="deliveryAddress" rows="3" style="width: 100%; padding: 0.5rem;"></textarea>
-                    </div>
-                    <div class="option-group">
-                        <label>Payment Method:</label>
-                        <div class="radio-group">
-                            <label class="radio-option">
-                                <input type="radio" name="paymentMethod" value="cod" checked>
-                                <span>Cash on Delivery</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
                 <div class="summary-row">
                     <span>Delivery Fee:</span>
                     <span class="delivery-fee">₱0.00</span>
                 </div>
-                <div class="summary-row" style="font-weight: bold; font-size: 1.1rem;">
+                <div class="summary-row total-row">
                     <span>Total:</span>
                     <span class="total">₱0.00</span>
                 </div>
-                <button class="submit-order" onclick="submitOrder()">Place Order</button>
+
+                <div class="delivery-options">
+                    <div class="option-group">
+                        <label>Delivery Method:</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="pickup" name="deliveryMethod" value="pickup" checked>
+                                <label for="pickup">Pickup</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="delivery" name="deliveryMethod" value="delivery">
+                                <label for="delivery">Delivery</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="option-group" id="deliveryAddressGroup" style="display: none;">
+                        <label for="deliveryAddress">Delivery Address:</label>
+                        <textarea id="deliveryAddress" placeholder="Enter delivery address"></textarea>
+                    </div>
+                </div>
+
+                <button onclick="placeOrder()" class="submit-order">Place Order</button>
             </div>
         </div>
     </template>
@@ -256,7 +307,10 @@
     </template>
 
     <!-- Scripts -->
-    <script src="/js/cart.js"></script>
     <script src="/js/cart-page.js"></script>
+    <script>
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', loadCart);
+    </script>
 </body>
 </html>

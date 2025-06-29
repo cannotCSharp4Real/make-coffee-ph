@@ -1,102 +1,214 @@
-// Handle modal operations
+// Authentication state management
+let isAuthenticated = false;
+
+// Function to check authentication status
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    isAuthenticated = !!token;
+    updateUIForAuthState();
+}
+
+// Function to update UI based on authentication state
+function updateUIForAuthState() {
+    const authButtons = document.getElementById('authButtons');
+    const userButtons = document.getElementById('userButtons');
+
+    if (isAuthenticated) {
+        if (authButtons) authButtons.style.display = 'none';
+        if (userButtons) userButtons.style.display = 'flex';
+    } else {
+        if (authButtons) authButtons.style.display = 'flex';
+        if (userButtons) userButtons.style.display = 'none';
+    }
+}
+
+// Modal management
+function closeAllModals() {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.style.display = 'none';
+    });
+}
+
 function openModal(modalId) {
-    document.getElementById(modalId).style.display = 'block';
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-}
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-    if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
+    closeAllModals();
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'block';
     }
 }
 
-// Handle registration
-async function handleRegister(event) {
+// Sign in functionality
+async function signIn(event) {
     event.preventDefault();
-    const form = event.target;
-    const errorDiv = document.getElementById('registerError');
     
-    try {
-        // Validate input
-        if (!form.email.value || !form.password.value) {
-            errorDiv.textContent = 'Email and password are required';
-            return;
-        }
+    const email = document.getElementById('signInEmail').value;
+    const password = document.getElementById('signInPassword').value;
 
-        const response = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                username: form.username.value,
-                email: form.email.value,
-                password: form.password.value,
-            }),
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'Registration failed');
-        }
-
-        updateAuthState(data);
-            closeModal('registerModal');
-        
-    } catch (error) {
-        errorDiv.style.color = 'red';
-        errorDiv.textContent = error.message;
-        console.error('Registration error:', error);
-    }
-}
-
-// Handle login
-async function handleLogin(event) {
-    event.preventDefault();
-    const form = event.target;
-    const errorDiv = document.getElementById('loginError');
-    
     try {
         const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                email: form.email.value,
-                password: form.password.value,
-            }),
+            body: JSON.stringify({ email, password })
         });
 
         const data = await response.json();
         
         if (!response.ok) {
-            throw new Error(data.message || 'Login failed');
+            throw new Error(data.message || 'Failed to sign in');
         }
 
-        updateAuthState(data);
-        closeModal('loginModal');
-
-        // For admin users, redirect to admin page
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userRole', data.user.role);
+        isAuthenticated = true;
+        
+        // Close the sign in modal
+        closeAllModals();
+        
+        // Update UI
+        updateUIForAuthState();
+        
+        // Show success notification
+        showNotification('Signed in successfully');
+        
+        // Redirect based on user role
         if (data.user.role === 'admin') {
             window.location.href = '/admin.html';
         } else {
-            window.location.reload();
+            window.location.href = '/';
         }
-        
     } catch (error) {
-        errorDiv.textContent = error.message;
+        showNotification(error.message, 'error');
     }
 }
 
-// Add to src/public/js/auth.js after successful login/register
-function updateAuthState(userData) {
-    localStorage.setItem('token', userData.token);
-    localStorage.setItem('userRole', userData.user.role);
-    updateHeaderState(); // Update header state after login/register
+// Logout functionality
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    isAuthenticated = false;
+    updateUIForAuthState();
+    showNotification('Logged out successfully');
+    window.location.href = '/';
+}
+
+// Register functionality
+async function register(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    
+    try {
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to register');
+        }
+
+        // Show success message
+        showNotification('Registration successful! Please sign in.');
+
+        // Close register modal and open sign in modal
+        closeAllModals();
+        openModal('loginModal');
+    } catch (error) {
+        showNotification(error.message, 'error');
+    }
+        }
+
+// Show notification
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Initialize auth state when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
+
+    // Add event listeners for modal close buttons
+    document.querySelectorAll('.modal .close').forEach(button => {
+        button.addEventListener('click', () => {
+            closeAllModals();
+        });
+    });
+        
+    // Close modal when clicking outside
+    window.addEventListener('click', (event) => {
+        if (event.target.classList.contains('modal')) {
+            closeAllModals();
+    }
+    });
+});
+
+// Add this function to your auth.js
+function checkAuthStatus() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        // User is not logged in, just update UI silently
+        updateAuthUI(false);
+        return;
+    }
+
+    // Only make the API call if we have a token
+    fetch('/api/auth/profile', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Not authenticated');
+        }
+        return response.json();
+    })
+    .then(user => {
+        updateAuthUI(true, user);
+    })
+    .catch(() => {
+        // Token is invalid, remove it and update UI
+        localStorage.removeItem('token');
+        updateAuthUI(false);
+    });
+}
+
+// Helper function to update UI based on auth state
+function updateAuthUI(isAuthenticated, user = null) {
+    const authButtons = document.querySelector('.auth-buttons');
+    if (!authButtons) return;
+
+    if (isAuthenticated && user) {
+        if (user.role === 'admin') {
+            authButtons.innerHTML = `
+                <button class="button button-secondary" onclick="location.href='/admin.html'">Admin Dashboard</button>
+                <button class="button button-primary" onclick="handleLogout()">Logout</button>
+            `;
+        } else {
+            authButtons.innerHTML = `
+                <button class="button button-primary" onclick="handleLogout()">Logout</button>
+            `;
+        }
+    } else {
+        authButtons.innerHTML = `
+            <button class="button button-secondary" onclick="openModal('loginModal')">Login</button>
+            <button class="button button-primary" onclick="openModal('registerModal')">Register</button>
+        `;
+    }
 }

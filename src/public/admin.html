@@ -11,13 +11,13 @@
             margin: 0 auto;
             padding: 2rem;
         }
-
+        
         .dashboard-nav {
             display: flex;
             gap: 1rem;
             margin-bottom: 2rem;
         }
-
+        
         .nav-tab {
             padding: 0.5rem 1rem;
             background: #f5f5f5;
@@ -78,7 +78,7 @@
             gap: 1rem;
             margin-bottom: 2rem;
         }
-
+        
         .summary-card {
             background: white;
             padding: 1rem;
@@ -103,14 +103,14 @@
             gap: 1rem;
             margin-top: 1rem;
         }
-
+        
         .product-card {
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             padding: 1rem;
         }
-
+        
         .product-header {
             display: flex;
             justify-content: space-between;
@@ -145,15 +145,19 @@
             height: 100%;
             background: rgba(0,0,0,0.5);
             z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
         }
 
         .modal-content {
             background: white;
-            margin: 10% auto;
+            margin: 20px auto;
             padding: 2rem;
             border-radius: 8px;
-            max-width: 500px;
+            max-width: 600px;
             position: relative;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
         }
 
         .modal-close {
@@ -163,50 +167,82 @@
             cursor: pointer;
             font-size: 1.5rem;
         }
-
+        
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
-
+        
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
         }
-
+        
         .form-group input,
-        .form-group select {
+        .form-group select,
+        .form-group textarea {
             width: 100%;
             padding: 0.5rem;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 1rem;
         }
 
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #4a3425;
+            outline: none;
+        }
+        
         .size-variants {
             display: grid;
-            gap: 0.5rem;
+            gap: 1rem;
+            margin-top: 1rem;
         }
 
         .size-variant {
             display: grid;
-            grid-template-columns: 100px 1fr;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
             align-items: center;
-            gap: 0.5rem;
+            padding: 1rem;
+            background: #f5f5f5;
+            border-radius: 4px;
         }
-
+        
         .addon-item {
-            display: grid;
-            grid-template-columns: 1fr 100px auto;
-            gap: 0.5rem;
+            background: #f5f5f5;
+            padding: 0.5rem;
+            border-radius: 4px;
             margin-bottom: 0.5rem;
         }
 
-        .addon-item button {
-            padding: 0.25rem 0.5rem;
-            background: #dc3545;
-            color: white;
+        .button {
+            padding: 0.5rem 1rem;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+
+        .button-primary {
+            background: #4a3425;
+            color: white;
+        }
+
+        .button-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .button-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .button:hover {
+            opacity: 0.9;
         }
 
         /* Product Management Styles */
@@ -285,17 +321,6 @@
             z-index: 1000;
         }
 
-        .modal-content {
-            background: white;
-            margin: 5% auto;
-            padding: 2rem;
-            border-radius: 8px;
-            max-width: 600px;
-            position: relative;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -348,7 +373,7 @@
             align-items: center;
             margin-bottom: 0.5rem;
         }
-
+        
         .form-actions {
             display: flex;
             gap: 1rem;
@@ -363,12 +388,12 @@
             cursor: pointer;
             font-size: 1rem;
         }
-
+        
         .button-primary {
             background: #4a3425;
             color: white;
         }
-
+        
         .button-secondary {
             background: #f5f5f5;
             color: #4a3425;
@@ -377,6 +402,124 @@
         .button-danger {
             background: #dc3545;
             color: white;
+        }
+        
+        /* Add styles for the form layout */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .add-ons-section {
+            margin-top: 1rem;
+        }
+
+        .add-on-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Make sure buttons are properly spaced */
+        .form-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: flex-end;
+        }
+
+        /* Ensure inputs don't overflow */
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Add responsive padding */
+        @media (max-width: 768px) {
+            .modal-content {
+                margin: 10px;
+                padding: 1rem;
+            }
+        }
+
+        /* Add these styles */
+        .order-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .status.pending { background: #fff3cd; }
+        .status.confirmed { background: #cce5ff; }
+        .status.preparing { background: #d4edda; }
+        .status.ready { background: #d1ecf1; }
+        .status.delivered { background: #c3e6cb; }
+        .status.completed { background: #d4edda; }
+        .status.cancelled { background: #f8d7da; }
+
+        .order-details {
+            margin-bottom: 1rem;
+        }
+
+        .order-items {
+            border-top: 1px solid #eee;
+            padding-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .order-actions {
+            border-top: 1px solid #eee;
+            padding-top: 1rem;
+        }
+
+        .order-actions select {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .notification-badge {
+            background-color: #ff4444;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            position: relative;
+            top: -8px;
+            display: none;
+        }
+
+        .nav-tab-container {
+            position: relative;
+            display: inline-block;
         }
     </style>
 </head>
@@ -391,27 +534,32 @@
     <div class="admin-dashboard">
         <div class="dashboard-nav">
             <button class="nav-tab active" onclick="showSection('orders')">Orders</button>
-            <button class="nav-tab" onclick="showSection('users')">Users</button>
+            <div class="nav-tab-container">
+                <button class="nav-tab" onclick="showSection('users')">Users</button>
+                <span id="orderNotificationBadge" class="notification-badge">0</span>
+            </div>
             <button class="nav-tab" onclick="showSection('reports')">Sales Report</button>
             <button class="nav-tab" onclick="showSection('products')">Products</button>
         </div>
 
         <!-- Orders Section -->
-        <div id="ordersSection" class="dashboard-section active">
-            <h2>Order Management</h2>
-            <div class="filters">
-                <select id="orderStatusFilter" onchange="loadOrders()">
-                    <option value="">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="preparing">Preparing</option>
-                    <option value="ready">Ready</option>
-                    <option value="delivered">Delivered</option>
-                    <option value="completed">Completed</option>
-                </select>
-                <input type="date" id="orderDateFilter" onchange="loadOrders()">
+        <div id="ordersSection" class="dashboard-section">
+            <div class="section-header">
+                <h2>Orders Management</h2>
+                <div class="filters">
+                    <select id="orderStatusFilter" onchange="loadOrders()">
+                        <option value="all">All Orders</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="preparing">Preparing</option>
+                        <option value="ready">Ready for Pickup</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                    <input type="date" id="orderDateFilter" onchange="loadOrders()">
+                </div>
             </div>
-            <div id="orderList" class="order-list">
+            <div id="ordersList" class="orders-list">
                 <!-- Orders will be loaded here -->
             </div>
         </div>
@@ -446,7 +594,7 @@
                 <h2>Product Management</h2>
                 <button class="button button-primary" onclick="openProductModal()">Add New Product</button>
             </div>
-            
+
             <div class="filters">
                 <select id="productTypeFilter" onchange="filterProducts()">
                     <option value="all">All Types</option>
@@ -481,28 +629,28 @@
                 <span class="close" onclick="closeProductModal()">&times;</span>
             </div>
             <form id="productForm" onsubmit="handleProductSubmit(event)">
-                <input type="hidden" id="productId">
+                    <input type="hidden" id="productId">
                 
-                <div class="form-group">
+                    <div class="form-group">
                     <label for="productName">Product Name:</label>
                     <input type="text" id="productName" name="name" required>
-                </div>
-
-                <div class="form-group">
+                    </div>
+                    
+                    <div class="form-group">
                     <label for="productType">Type:</label>
                     <select id="productType" name="type" onchange="handleTypeChange()" required>
                         <option value="food">Food</option>
-                        <option value="drink">Drink</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
+                            <option value="drink">Drink</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
                     <label for="productCategory">Category:</label>
                     <select id="productCategory" name="category" required>
                         <!-- Options will be populated based on type -->
-                    </select>
-                </div>
-
+                        </select>
+                    </div>
+                    
                 <div id="foodPriceSection" class="form-group">
                     <label for="productPrice">Price:</label>
                     <input type="number" id="productPrice" name="price" min="0" step="0.01">
@@ -521,9 +669,9 @@
                     <div class="size-variant">
                         <label>Large:</label>
                         <input type="number" id="largePrice" min="0" step="0.01">
+                        </div>
                     </div>
-                </div>
-
+                    
                 <div id="addOnsSection" class="form-group" style="display: none;">
                     <label>Add-ons:</label>
                     <div id="addOnsList"></div>
@@ -535,17 +683,142 @@
                         <input type="checkbox" id="productAvailable" name="available" checked>
                         Available
                     </label>
-                </div>
+            </div>
 
                 <div class="form-actions">
                     <button type="submit" class="button button-primary">Save Product</button>
                     <button type="button" class="button button-secondary" onclick="closeProductModal()">Cancel</button>
-                </div>
+            </div>
             </form>
         </div>
-    </div>
+                </div>
 
     <script src="/js/admin.js"></script>
     <script src="/js/product-management.js"></script>
+    <script>
+        // Add to your existing JavaScript
+        async function loadOrders() {
+            try {
+                const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+
+                const statusFilter = document.getElementById('orderStatusFilter');
+                const dateFilter = document.getElementById('orderDateFilter');
+                
+                const status = statusFilter ? statusFilter.value : 'all';
+                const date = dateFilter ? dateFilter.value : '';
+
+                const response = await fetch(`/api/orders/all?status=${status}&date=${date}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch orders: ${response.status}`);
+                }
+
+                const orders = await response.json();
+                displayOrders(orders);
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                const ordersList = document.getElementById('ordersList');
+                if (ordersList) {
+                    ordersList.innerHTML = `
+                        <div class="error-message">
+                            Failed to load orders. Please try again.
+                            <button onclick="loadOrders()">Retry</button>
+                        </div>
+                    `;
+                    }
+            }
+        }
+
+        function displayOrders(orders) {
+            const ordersList = document.getElementById('ordersList');
+            if (!ordersList) {
+                console.error('Orders list container not found');
+                return;
+            }
+
+            if (!orders || orders.length === 0) {
+                ordersList.innerHTML = '<div class="no-orders">No orders found</div>';
+                return;
+            }
+
+            ordersList.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <h3>Order #${order.orderNumber || order._id}</h3>
+                        <span class="status ${order.status}">${order.status}</span>
+                    </div>
+                    <div class="order-details">
+                        <p>Customer: ${order.user ? order.user.email : 'N/A'}</p>
+                        <p>Total Amount: PHP ${order.totalAmount.toFixed(2)}</p>
+                        <p>Delivery Method: ${order.deliveryMethod}</p>
+                        <p>Created: ${new Date(order.createdAt).toLocaleString()}</p>
+                    </div>
+                    <div class="order-items">
+                        ${order.items.map(item => `
+                            <div class="order-item">
+                                <span>${item.product ? item.product.name : 'Unknown Product'}</span>
+                                <span>x${item.quantity}</span>
+                                <span>PHP ${item.totalPrice.toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="order-actions">
+                        <select onchange="updateOrderStatus('${order._id}', this.value)"
+                                ${order.status === 'cancelled' || order.status === 'completed' ? 'disabled' : ''}>
+                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                            <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>Preparing</option>
+                            <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>Ready</option>
+                            <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                            <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
+                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function updateOrderStatus(orderId, status) {
+            try {
+                const response = await fetch(`/api/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ status })
+                });
+                if (response.ok) {
+                    loadOrders(); // Refresh the orders list
+                }
+            } catch (error) {
+                console.error('Error updating order status:', error);
+            }
+        }
+
+        // Add loadOrders() to your initialization function
+        document.addEventListener('DOMContentLoaded', () => {
+            // ... existing initialization code ...
+            if (currentTab === 'orders') {
+                loadOrders();
+            }
+        });
+
+        // Update showTab function
+        function showTab(tabName) {
+            // ... existing tab switching code ...
+            if (tabName === 'orders') {
+                loadOrders();
+            }
+        }
+    </script>
 </body>
 </html>

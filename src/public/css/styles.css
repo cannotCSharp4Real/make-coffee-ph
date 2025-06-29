@@ -77,28 +77,31 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    z-index: 2000;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
 }
 
 .modal-content {
     background-color: white;
+    margin: 15% auto;
     padding: 2rem;
     border-radius: 8px;
     width: 90%;
-    max-width: 400px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    max-width: 500px;
+    position: relative;
 }
 
-.modal-close {
+.close {
     position: absolute;
     right: 1rem;
     top: 1rem;
-    cursor: pointer;
     font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+}
+
+.close:hover {
+    color: #333;
 }
 
 .form-group {
@@ -117,23 +120,49 @@ body {
     border-radius: 4px;
 }
 
-.error-message {
-    color: #dc3545;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
+.submit-button {
+    width: 100%;
+    padding: 0.75rem;
+    background: #4a3425;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
 }
 
-/* Notification Styles */
+.submit-button:hover {
+    background: #5c4232;
+}
+
+.modal-footer {
+    margin-top: 1rem;
+    text-align: center;
+    color: #666;
+}
+
+.modal-footer a {
+    color: #4a3425;
+    text-decoration: none;
+}
+
+.modal-footer a:hover {
+    text-decoration: underline;
+}
+
 .notification {
     position: fixed;
     top: 20px;
     right: 20px;
     padding: 1rem;
     border-radius: 4px;
-    background: #4a3425;
     color: white;
-    z-index: 1000;
+    z-index: 2000;
     animation: slideIn 0.3s ease;
+}
+
+.notification.success {
+    background: #28a745;
 }
 
 .notification.error {
@@ -173,28 +202,236 @@ body {
 
 /* Cart Styles */
 .add-to-cart-btn {
-    background: #4a3425;
+    background-color: #5D4037;
     color: white;
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    width: 100%;
 }
 
 .add-to-cart-btn:hover {
-    background: #5c4232;
+    background-color: #4E342E;
 }
 
 .drink-options {
     display: flex;
+    flex-direction: column;
     gap: 0.5rem;
-    margin-top: 1rem;
 }
 
 .size-select {
     padding: 0.5rem;
     border: 1px solid #ddd;
     border-radius: 4px;
-    flex: 1;
+    width: 100%;
+}
+
+.add-ons {
+    margin: 1rem 0;
+    padding: 0.5rem;
+    border-top: 1px solid #eee;
+}
+
+.add-on-item {
+    margin: 0.5rem 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin: 0;
+}
+
+.retry-button {
+    background-color: #5D4037;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 1rem;
+}
+
+.retry-button:hover {
+    background-color: #4E342E;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 0.25rem;
+    font-family: inherit;
+}
+
+.total-row {
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-top: 1px solid #eee;
+    padding-top: 1rem;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.cancel-button {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.cancel-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.view-button {
+    background: #4a3425;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.radio-group {
+    margin-top: 0.5rem;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.radio-option input[type="radio"] {
+    cursor: pointer;
+}
+
+/* Add these styles */
+.order-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #ff4081;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    display: none;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+}
+
+.order-count-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #ff4081;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-pending { background-color: #ffd700; }
+.status-confirmed { background-color: #87ceeb; }
+.status-preparing { background-color: #ffa500; }
+.status-ready { background-color: #90ee90; }
+.status-delivered { background-color: #98fb98; }
+.status-completed { background-color: #3cb371; }
+.status-cancelled { background-color: #ff6961; }
+
+@keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+.orders-list {
+    margin-top: 20px;
+}
+
+.order-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    padding: 15px;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.order-details {
+    margin-bottom: 15px;
+}
+
+.order-items {
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    padding: 10px 0;
+    margin: 10px 0;
+}
+
+.order-item {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 10px;
+    padding: 5px 0;
+}
+
+.order-actions {
+    margin-top: 15px;
+    text-align: right;
+}
+
+.status {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.error-message {
+    text-align: center;
+    padding: 20px;
+    background: #fff3f3;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.no-orders {
+    text-align: center;
+    padding: 20px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    margin: 20px 0;
 }

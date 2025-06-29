@@ -8,11 +8,20 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
+        
+        // Store user information consistently
+        req.user = {
+            _id: decoded.userId,  // Use _id consistently
+            role: decoded.role
+        };
+
+        console.log('Authenticated user:', req.user);
+        
     next();
   } catch (error) {
-    res.status(401).json({ message: 'Invalid token' });
+        console.error('Auth middleware error:', error);
+        res.status(401).json({ message: 'Authentication failed', error: error.message });
   }
 };
 

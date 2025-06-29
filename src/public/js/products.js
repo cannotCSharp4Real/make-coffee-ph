@@ -17,6 +17,7 @@ const createProductHTML = (product) => {
             <span>${formatPrice(product.price)}</span>
         </div>`;
     } else {
+        // Use sizeVariants instead of variants
         priceHTML = product.sizeVariants.map(variant => `
             <div class="size-variant">
                 <span>${variant.size.charAt(0).toUpperCase() + variant.size.slice(1)}:</span>
@@ -25,6 +26,7 @@ const createProductHTML = (product) => {
         `).join('');
     }
 
+    // Add-ons section
     let addOnsHTML = '';
     if (product.addOns && product.addOns.length > 0) {
         addOnsHTML = `
@@ -32,22 +34,30 @@ const createProductHTML = (product) => {
                 <h4>Add-ons:</h4>
                 ${product.addOns.map(addon => `
                     <div class="add-on-item">
-                        <span>${addon.name}</span>
-                        <span>${formatPrice(addon.price)}</span>
+                        <label class="checkbox-label">
+                            <input type="checkbox" 
+                                   name="addons-${product._id}" 
+                                   data-name="${addon.name}"
+                                   data-price="${addon.price}"
+                                   ${!addon.available ? 'disabled' : ''}>
+                            <span>${addon.name} (${formatPrice(addon.price)})</span>
+                        </label>
                     </div>
                 `).join('')}
             </div>
         `;
     }
 
+    // Add to cart button/section
     let addToCartButton = '';
-    if (product.type === 'food') {
+    if (isFood) {
         addToCartButton = `
             <button class="add-to-cart-btn" onclick="addToCart('${product._id}', '${product.name}', ${product.price}, 'food')">
                 Add to Cart
             </button>
         `;
     } else {
+        // For drinks, show size selector
         const sizeOptions = product.sizeVariants.map(variant => `
             <option value="${variant.size}" data-price="${variant.price}">
                 ${variant.size.charAt(0).toUpperCase() + variant.size.slice(1)} - ${formatPrice(variant.price)}
@@ -94,9 +104,12 @@ const fetchAndDisplayProducts = async () => {
     const menuGrid = document.getElementById('menuGrid');
     try {
         const response = await fetch('/api/products');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const products = await response.json();
         
-        if (products.length === 0) {
+        if (!Array.isArray(products) || products.length === 0) {
             menuGrid.innerHTML = '<div class="no-results">No products available</div>';
             return;
         }
@@ -107,9 +120,19 @@ const fetchAndDisplayProducts = async () => {
             .join('');
     } catch (error) {
         console.error('Error fetching products:', error);
-        menuGrid.innerHTML = '<div class="no-results">Error loading products. Please try again later.</div>';
+        menuGrid.innerHTML = `
+            <div class="error-message">
+                <p>Error loading products. Please try again later.</p>
+                <button onclick="retryLoadProducts()" class="retry-button">Retry</button>
+            </div>
+        `;
     }
 };
+
+// Add retry function
+function retryLoadProducts() {
+    fetchAndDisplayProducts();
+}
 
 // Filter functionality
 const handleFilter = (type) => {
@@ -145,29 +168,68 @@ document.addEventListener('DOMContentLoaded', () => {
 // Set up real-time updates using WebSocket or Server-Sent Events
 // Note: This requires WebSocket or SSE implementation on the server side
 const setupRealtimeUpdates = () => {
-    // Using Server-Sent Events (SSE) for real-time updates
-    const eventSource = new EventSource('/api/products/events');
+    // Only set up SSE if we're on a page that needs real-time updates
+    if (!document.getElementById('menuGrid')) {
+        return; // Exit if we're not on a page with menu items
+    }
 
-    eventSource.onmessage = (event) => {
-        // Refresh products when a change is detected
-        fetchAndDisplayProducts();
+    if (typeof EventSource === 'undefined') {
+        console.warn('SSE not supported in this browser');
+        return;
+    }
+
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    const connect = () => {
+        try {
+            const eventSource = new EventSource('/api/products/events');
+
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'productUpdate') {
+                    fetchAndDisplayProducts();
+                }
+            };
+
+            eventSource.onerror = () => {
+                eventSource.close();
+                retryCount++;
+                
+                // Only retry a few times, then give up silently
+                if (retryCount < maxRetries) {
+                    setTimeout(connect, 5000);
+                }
+            };
+
+            // Clean up on page unload
+            window.addEventListener('beforeunload', () => {
+                eventSource.close();
+            });
+        } catch (error) {
+            // Silently fail after logging
+            console.warn('SSE setup failed, real-time updates disabled');
+        }
     };
 
-    eventSource.onerror = (error) => {
-        console.error('Error in SSE connection:', error);
-        eventSource.close();
-        // Try to reconnect after 5 seconds
-        setTimeout(setupRealtimeUpdates, 5000);
-    };
+    connect();
 };
 
 // Start real-time updates
 setupRealtimeUpdates();
 
-// Add function to handle adding drinks to cart
+// Function to handle adding drinks to cart
 function handleAddDrinkToCart(productId, productName) {
     const sizeSelect = document.getElementById(`size-${productId}`);
     const size = sizeSelect.value;
     const price = parseFloat(sizeSelect.selectedOptions[0].dataset.price);
-    addToCart(productId, productName, price, 'drink', size);
+    
+    // Get selected add-ons
+    const selectedAddOns = Array.from(document.querySelectorAll(`input[name="addons-${productId}"]:checked`))
+        .map(checkbox => ({
+            name: checkbox.dataset.name,
+            price: parseFloat(checkbox.dataset.price)
+        }));
+    
+    addToCart(productId, productName, price, 'drink', size, selectedAddOns);
 }

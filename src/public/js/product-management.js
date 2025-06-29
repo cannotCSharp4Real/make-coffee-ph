@@ -181,32 +181,56 @@ async function handleProductSubmit(event) {
         const type = document.getElementById('productType').value;
         
         const productData = {
-            name: document.getElementById('productName').value,
+            name: document.getElementById('productName').value.trim(),
             type: type,
             category: document.getElementById('productCategory').value,
             available: document.getElementById('productAvailable').checked
         };
 
-        if (type === 'food') {
-            productData.price = parseFloat(document.getElementById('productPrice').value);
-        } else {
-            productData.sizeVariants = [
-                { size: 'small', price: parseFloat(document.getElementById('smallPrice').value) },
-                { size: 'medium', price: parseFloat(document.getElementById('mediumPrice').value) },
-                { size: 'large', price: parseFloat(document.getElementById('largePrice').value) }
-            ];
+        // Validate required fields
+        if (!productData.name) {
+            throw new Error('Product name is required');
+        }
 
-            productData.addOns = Array.from(document.querySelectorAll('.addon-item')).map(item => ({
-                name: item.querySelector('input[type="text"]').value,
-                price: parseFloat(item.querySelector('input[type="number"]').value)
-            }));
+        if (type === 'food') {
+            const price = parseFloat(document.getElementById('productPrice').value);
+            if (isNaN(price) || price <= 0) {
+                throw new Error('Please enter a valid price');
+            }
+            productData.price = price;
+        } else {
+            // Validate and add size variants
+            const sizeVariants = ['small', 'medium', 'large'].map(size => {
+                const price = parseFloat(document.getElementById(`${size}Price`).value);
+                if (isNaN(price) || price <= 0) {
+                    throw new Error(`Please enter a valid price for ${size} size`);
+                }
+                return { size, price };
+            });
+            productData.sizeVariants = sizeVariants;
+
+            // Add add-ons if any
+            const addOns = Array.from(document.querySelectorAll('.addon-item')).map(item => {
+                const name = item.querySelector('input[type="text"]').value.trim();
+                const price = parseFloat(item.querySelector('input[type="number"]').value);
+                
+                if (!name || isNaN(price) || price < 0) {
+                    throw new Error('Please fill in all add-on fields correctly');
+                }
+                
+                return { name, price };
+            });
+            
+            if (addOns.length > 0) {
+                productData.addOns = addOns;
+            }
         }
 
         const token = localStorage.getItem('token');
         const url = productId 
             ? `/api/admin/products/${productId}`
             : '/api/admin/products';
-        
+            
         const response = await fetch(url, {
             method: productId ? 'PUT' : 'POST',
             headers: {
@@ -217,15 +241,15 @@ async function handleProductSubmit(event) {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to save product');
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to save product');
         }
 
-        await loadProducts();
+        await loadProducts(); // Reload the product list
         closeProductModal();
         showNotification(productId ? 'Product updated successfully' : 'Product created successfully');
     } catch (error) {
-        console.error('Error saving product:', error);
-        showNotification('Failed to save product', 'error');
+        showNotification(error.message, 'error');
     }
 }
 
@@ -245,14 +269,14 @@ async function deleteProduct(productId) {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to delete product');
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to delete product');
         }
 
-        await loadProducts();
+        await loadProducts(); // Reload the product list
         showNotification('Product deleted successfully');
     } catch (error) {
-        console.error('Error deleting product:', error);
-        showNotification('Failed to delete product', 'error');
+        showNotification(error.message, 'error');
     }
 }
 

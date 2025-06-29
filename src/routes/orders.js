@@ -1,46 +1,24 @@
 const express = require('express');
 const router = express.Router();
+const orderController = require('../controllers/orderController');
 const auth = require('../middleware/auth');
-const Order = require('../models/order');
-const Cart = require('../models/cart');
+const adminAuth = require('../middleware/adminAuth');
 
-router.use(auth);
+// Customer routes
+router.post('/', auth, orderController.createOrder);
+router.post('/:orderId/cancel', auth, orderController.cancelOrder);
+router.get('/history', auth, orderController.getOrderHistory);
 
-// Create new order
-router.post('/', async (req, res) => {
-    try {
-        const {
-            items,
-            deliveryMethod,
-            deliveryAddress,
-            paymentMethod,
-            totalAmount,
-            deliveryFee
-        } = req.body;
+// Admin routes
+router.get('/all', auth, adminAuth, orderController.getAllOrders);
+router.put('/:orderId/status', auth, adminAuth, orderController.updateOrderStatus);
 
-        const order = new Order({
-            user: req.user.userId,
-            items,
-            deliveryMethod,
-            deliveryAddress,
-            paymentMethod,
-            totalAmount,
-            deliveryFee,
-            status: 'pending'
-        });
-
-        await order.save();
-
-        // Clear the user's cart after successful order
-        await Cart.findOneAndUpdate(
-            { user: req.user.userId },
-            { $set: { items: [] } }
-        );
-
-        res.status(201).json(order);
-    } catch (error) {
-        res.status(500).json({ message: 'Error creating order', error: error.message });
-    }
+// Serve checkout page
+router.get('/checkout', auth, (req, res) => {
+    res.sendFile('checkout.html', { root: './src/public' });
 });
+
+// Get user's orders (for polling)
+router.get('/my-orders', auth, orderController.getMyOrders);
 
 module.exports = router;

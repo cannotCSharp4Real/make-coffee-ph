@@ -200,15 +200,17 @@ const adminController = {
 
     updateProduct: async (req, res) => {
         try {
-            console.log('Updating product with data:', req.body);
+            const { id } = req.params;
             const product = await Product.findByIdAndUpdate(
-                req.params.id,
+                id,
                 req.body,
                 { new: true, runValidators: true }
             );
+            
             if (!product) {
                 return res.status(404).json({ message: 'Product not found' });
             }
+            
             res.json(product);
         } catch (error) {
             console.error('Error updating product:', error);
@@ -218,10 +220,13 @@ const adminController = {
 
     deleteProduct: async (req, res) => {
         try {
-            const product = await Product.findByIdAndDelete(req.params.id);
+            const { id } = req.params;
+            const product = await Product.findByIdAndDelete(id);
+            
             if (!product) {
                 return res.status(404).json({ message: 'Product not found' });
             }
+            
             res.json({ message: 'Product deleted successfully' });
         } catch (error) {
             console.error('Error deleting product:', error);

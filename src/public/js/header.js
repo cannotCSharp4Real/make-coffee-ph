@@ -47,8 +47,18 @@ function viewProfile() {
 
 // View orders function
 function viewOrders() {
-    // Implement orders view functionality
-    console.log('View orders clicked');
+    // Hide the profile dropdown
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (profileDropdown) {
+        profileDropdown.classList.remove('show');
+    }
+
+    // Show the orders modal
+    const orderModal = document.getElementById('orderHistoryModal');
+    if (orderModal) {
+        orderModal.style.display = 'block';
+        loadOrderHistory(); // This function is defined in orders.js
+    }
 }
 
 // Cart button click handler

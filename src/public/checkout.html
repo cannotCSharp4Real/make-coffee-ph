@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Make Coffee</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="checkout-container">
+        <h2>Checkout</h2>
+        
+        <!-- Order Summary -->
+        <div id="orderSummaryContainer"></div>
+
+        <!-- Delivery Options -->
+        <div class="delivery-options">
+            <h3>Delivery Method</h3>
+            <select id="deliveryMethod">
+                <option value="pickup">Pickup</option>
+                <option value="delivery">Delivery</option>
+            </select>
+
+            <div id="deliveryAddressContainer" style="display: none;">
+                <h3>Delivery Address</h3>
+                <textarea id="deliveryAddress" rows="3" placeholder="Enter your delivery address"></textarea>
+            </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="payment-method">
+            <h3>Payment Method</h3>
+            <p>Cash on Delivery/Pickup</p>
+        </div>
+
+        <!-- Place Order Button -->
+        <button id="placeOrderBtn" class="btn-primary">Place Order</button>
+    </div>
+
+    <script src="/js/checkout.js"></script>
+</body>
+</html> 

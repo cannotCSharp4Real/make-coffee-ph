@@ -1,9 +1,15 @@
 const mongoose = require('mongoose');
+const Counter = require('./counter');
 
 const orderSchema = new mongoose.Schema({
+    orderNumber: {
+        type: Number,
+        unique: true,
+        required: true
+    },
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'user',
+        ref: 'User',
         required: true
     },
     items: [{
@@ -60,4 +66,17 @@ const orderSchema = new mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model('Order', orderSchema);
+// Function to get the next order number
+async function getNextOrderNumber() {
+    const counter = await Counter.findByIdAndUpdate(
+        'orderNumber',
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+    );
+    return counter.seq;
+}
+
+module.exports = {
+    Order: mongoose.model('Order', orderSchema),
+    getNextOrderNumber
+};

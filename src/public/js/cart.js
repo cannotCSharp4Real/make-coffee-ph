@@ -13,17 +13,28 @@ async function addToCart(productId, productName, price, type, size = null, addOn
             return;
         }
 
-        // Create request body based on product type
+        // Create request body
         const requestBody = {
             productId,
-            quantity: 1,
-            addOns: []
+            quantity: 1
         };
 
         // Add size for drinks
-        if (type === 'drink' && size) {
+        if (type === 'drink') {
+            if (!size) {
+                throw new Error('Size is required for drinks');
+            }
             requestBody.size = size;
         }
+
+        // Add selected add-ons
+        const selectedAddOns = Array.from(document.querySelectorAll(`input[name="addons-${productId}"]:checked`))
+            .map(checkbox => ({
+                name: checkbox.dataset.name,
+                price: parseFloat(checkbox.dataset.price)
+            }));
+        
+        requestBody.addOns = selectedAddOns;
 
         const response = await fetch('/api/cart/add', {
             method: 'POST',

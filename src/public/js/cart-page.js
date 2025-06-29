@@ -180,5 +180,164 @@ function showNotification(message, type = 'success') {
     }, 3000);
 }
 
+// Place order
+async function placeOrder() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            showNotification('Please log in to place an order', 'error');
+            window.location.href = '/';
+            return;
+        }
+
+        // Disable the place order button
+        const placeOrderButton = document.querySelector('.submit-order');
+        placeOrderButton.disabled = true;
+
+        // Get delivery method and address
+        const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked')?.value;
+        if (!deliveryMethod) {
+            showNotification('Please select a delivery method', 'error');
+            placeOrderButton.disabled = false;
+            return;
+        }
+
+        const deliveryAddress = document.getElementById('deliveryAddress')?.value || '';
+
+        if (deliveryMethod === 'delivery' && !deliveryAddress.trim()) {
+            showNotification('Please enter a delivery address', 'error');
+            placeOrderButton.disabled = false;
+            return;
+        }
+
+        const orderData = {
+            deliveryMethod,
+            deliveryAddress: deliveryMethod === 'delivery' ? deliveryAddress : ''
+        };
+
+        console.log('Sending order request with:', orderData);
+
+        // Place the order
+        const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(orderData)
+        });
+
+        const data = await response.json();
+        console.log('Server response:', data);
+
+        if (!response.ok) {
+            throw new Error(data.message || data.error || 'Failed to place order');
+        }
+
+        // Show success and handle order confirmation
+        showOrderConfirmation(data.order);
+        startCancellationCountdown(data.order._id, data.cancellationWindow || 10);
+
+    } catch (error) {
+        console.error('Error placing order:', error);
+        showNotification(error.message || 'Failed to place order', 'error');
+        const placeOrderButton = document.querySelector('.submit-order');
+        if (placeOrderButton) {
+            placeOrderButton.disabled = false;
+        }
+    }
+}
+
+// Show order confirmation
+function showOrderConfirmation(order) {
+    const confirmationHTML = `
+        <div class="order-confirmation">
+            <h2>Order Placed Successfully!</h2>
+            <p>Order ID: ${order._id}</p>
+            <p>Total Amount: ${formatPrice(order.totalAmount + order.deliveryFee)}</p>
+            <p>Status: ${order.status}</p>
+            <div class="cancellation-timer">
+                <p>You can cancel this order within <span id="countdown">10</span> seconds</p>
+                <button onclick="cancelOrder('${order._id}')" class="cancel-order-btn">Cancel Order</button>
+            </div>
+            <button onclick="closeOrderConfirmation()" class="close-confirmation-btn">Close</button>
+        </div>
+    `;
+
+    const confirmationContainer = document.createElement('div');
+    confirmationContainer.className = 'order-confirmation-overlay';
+    confirmationContainer.innerHTML = confirmationHTML;
+    document.body.appendChild(confirmationContainer);
+}
+
+// Start cancellation countdown
+function startCancellationCountdown(orderId, seconds) {
+    const countdownElement = document.getElementById('countdown');
+    let timeLeft = seconds;
+
+    const countdownInterval = setInterval(() => {
+        timeLeft--;
+        if (countdownElement) {
+            countdownElement.textContent = timeLeft;
+        }
+
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            const cancelBtn = document.querySelector('.cancel-order-btn');
+            if (cancelBtn) {
+                cancelBtn.disabled = true;
+                cancelBtn.textContent = 'Order Confirmed';
+            }
+        }
+    }, 1000);
+}
+
+// Cancel order
+async function cancelOrder(orderId) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/orders/${orderId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to cancel order');
+        }
+
+        showNotification('Order cancelled successfully');
+        closeOrderConfirmation();
+        window.location.href = '/'; // Redirect to home page
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        showNotification(error.message || 'Failed to cancel order', 'error');
+    }
+}
+
+// Close order confirmation
+function closeOrderConfirmation() {
+    const confirmationOverlay = document.querySelector('.order-confirmation-overlay');
+    if (confirmationOverlay) {
+        confirmationOverlay.remove();
+    }
+    window.location.href = '/'; // Redirect to home page
+}
+
+// Add this to your existing cart page JavaScript
+function addCheckoutButton() {
+    const checkoutBtn = document.createElement('button');
+    checkoutBtn.className = 'btn-primary';
+    checkoutBtn.textContent = 'Proceed to Checkout';
+    checkoutBtn.onclick = () => {
+        window.location.href = '/orders/checkout';
+    };
+    
+    document.querySelector('.cart-container').appendChild(checkoutBtn);
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', loadCart);
