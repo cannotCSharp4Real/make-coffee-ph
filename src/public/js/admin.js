@@ -2,13 +2,14 @@
 let currentTab = 'dashboard'; // Default tab
 let lastOrderCount = 0;
 let pollingInterval;
+let seenOrders = new Set(); // Track orders that admin has seen/modified
 
 // Start polling for new orders
 function startOrderPolling() {
     // Initial check
     checkNewOrders();
     
-    // Poll every 30 seconds
+    // Poll every 10 seconds
     pollingInterval = setInterval(checkNewOrders, 10000);
 }
 
@@ -34,32 +35,10 @@ async function checkNewOrders() {
         }
 
         const orders = await response.json();
-        const pendingOrderCount = orders.length;
-
-        // Update notification badge
-        const badge = document.getElementById('orderNotificationBadge');
-        if (pendingOrderCount > 0) {
-            badge.style.display = 'inline';
-            badge.textContent = pendingOrderCount;
-
-            // If there are new orders since last check
-            if (pendingOrderCount > lastOrderCount) {
-                // Play notification sound
-                const audio = document.getElementById('orderNotificationSound');
-                if (audio) {
-                    audio.play().catch(err => console.log('Error playing sound:', err));
-                }
-
-                // Show notification if not on orders tab
-                if (currentTab !== 'orders') {
-                    showNotification(`You have ${pendingOrderCount} pending order${pendingOrderCount > 1 ? 's' : ''}`);
-                }
-            }
-        } else {
-            badge.style.display = 'none';
-        }
-
-        lastOrderCount = pendingOrderCount;
+        
+        // Filter for truly new orders (not in seenOrders)
+        const unseenOrders = orders.filter(order => !seenOrders.has(order._id));
+        const unseenOrderCount = unseenOrders.length;
 
         // If we're on the orders tab, update the list
         if (currentTab === 'orders') {
@@ -100,6 +79,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Start polling
     startOrderPolling();
+
+    // Load initial data
+    loadOrders();
 });
 
 // Clean up when page unloads
@@ -117,16 +99,7 @@ function formatPrice(price) {
 
 // Show selected section
 function showSection(sectionId) {
-    currentTab = sectionId; // Update current tab
-    
-    // If switching to orders tab, clear notification count
-    if (sectionId === 'orders') {
-        const badge = document.getElementById('orderNotificationBadge');
-        if (badge) {
-            badge.style.display = 'none';
-        }
-    }
-
+    // Hide all sections and deactivate all tabs
     document.querySelectorAll('.dashboard-section').forEach(section => {
         section.classList.remove('active');
     });
@@ -134,13 +107,14 @@ function showSection(sectionId) {
         tab.classList.remove('active');
     });
 
+    // Show selected section and activate its tab
     const section = document.getElementById(`${sectionId}Section`);
     const tab = document.querySelector(`.nav-tab[onclick="showSection('${sectionId}')"]`);
     
     if (section) section.classList.add('active');
     if (tab) tab.classList.add('active');
 
-    // Load section-specific data
+    // Load section data
     switch(sectionId) {
         case 'orders':
             loadOrders();
@@ -148,11 +122,12 @@ function showSection(sectionId) {
         case 'users':
             loadUsers();
             break;
-        case 'reports':
-            generateReport();
-            break;
         case 'products':
             loadProducts();
+            handleTypeChange(); // Initialize product form
+            break;
+        case 'reports':
+            generateReport();
             break;
     }
 }
@@ -161,10 +136,7 @@ function showSection(sectionId) {
 async function loadOrders() {
     try {
         const orderList = document.getElementById('orderList');
-        if (!orderList) {
-            console.error('Order list element not found');
-            return;
-        }
+        if (!orderList) return;
 
         const statusFilter = document.getElementById('orderStatusFilter');
         const dateFilter = document.getElementById('orderDateFilter');
@@ -184,73 +156,56 @@ async function loadOrders() {
             }
         });
 
-        if (!response.ok) {
-            throw new Error(`Failed to fetch orders: ${response.status}`);
-        }
+        if (!response.ok) throw new Error('Failed to fetch orders');
 
         const orders = await response.json();
         
-        if (orders.length === 0) {
-            orderList.innerHTML = '<div class="no-orders">No orders found</div>';
-            return;
-        }
+        orderList.innerHTML = orders.length === 0 ? 
+            '<div class="no-orders">No orders found</div>' :
+            orders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <h3>Order #${order.orderNumber || order._id}</h3>
+                        <span class="status ${order.status}">${order.status}</span>
+                    </div>
+                    <div class="order-details">
+                        <p>Customer: ${order.user ? order.user.email : 'N/A'}</p>
+                        <p>Total Amount: ${formatPrice(order.totalAmount)}</p>
+                        <p>Delivery Method: ${order.deliveryMethod}</p>
+                        <p>Created: ${new Date(order.createdAt).toLocaleString()}</p>
+                    </div>
+                    <div class="order-actions">
+                        <select onchange="updateOrderStatus('${order._id}', this.value)">
+                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                            <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
+                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+            `).join('');
 
-        orderList.innerHTML = orders.map(order => `
-            <div class="order-item">
-                <div>#${order.orderNumber || order._id}</div>
-                <div>
-                    ${order.items.map(item => `
-                        ${item.quantity}x ${item.product?.name || 'Unknown Product'}
-                    `).join('<br>')}
-                </div>
-                <div>${formatPrice(order.totalAmount)}</div>
-                <div>
-                    <select class="status-select" onchange="updateOrderStatus('${order._id}', this.value)">
-                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                        <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
-                        <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>Preparing</option>
-                        <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>Ready</option>
-                        <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                        <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
-                    </select>
-                </div>
-                <div>${new Date(order.createdAt).toLocaleString()}</div>
-            </div>
-        `).join('');
     } catch (error) {
         console.error('Error loading orders:', error);
-        const orderList = document.getElementById('orderList');
-        if (orderList) {
-            orderList.innerHTML = '<div class="error">Failed to load orders. Please try again.</div>';
-        }
+        orderList.innerHTML = '<div class="error">Failed to load orders</div>';
     }
 }
 
 // Update order status
-async function updateOrderStatus(orderId, status) {
+async function updateOrderStatus(orderId, newStatus) {
     try {
-        // Clear notification badge when starting to update status
-        const badge = document.getElementById('orderNotificationBadge');
-        if (badge) {
-            badge.style.display = 'none';
-        }
-        lastOrderCount = 0; // Reset the counter
-
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/admin/orders/${orderId}/status`, {
+        const response = await fetch(`/api/orders/${orderId}/status`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ status })
+            body: JSON.stringify({ status: newStatus })
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to update order status');
-        }
+        if (!response.ok) throw new Error('Failed to update order status');
 
-        // Reload orders to show updated status
+        // Refresh orders list
         loadOrders();
     } catch (error) {
         console.error('Error updating order status:', error);

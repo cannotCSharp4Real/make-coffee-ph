@@ -8,20 +8,20 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
-        
-        // Store user information consistently
-        req.user = {
-            _id: decoded.userId,  // Use _id consistently
-            role: decoded.role
-        };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
+    
+    // Store user information consistently
+    req.user = {
+        _id: decoded.userId || decoded._id,  // Store as _id for consistency
+        role: decoded.role
+    };
 
-        console.log('Authenticated user:', req.user);
-        
+    console.log('Authenticated user:', req.user);
+    
     next();
   } catch (error) {
-        console.error('Auth middleware error:', error);
-        res.status(401).json({ message: 'Authentication failed', error: error.message });
+    console.error('Auth middleware error:', error);
+    res.status(401).json({ message: 'Authentication failed', error: error.message });
   }
 };
 

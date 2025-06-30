@@ -31,10 +31,20 @@ const cartController = {
         try {
             const { productId, quantity = 1, size, addOns = [] } = req.body;
 
+            // Validate required fields
+            if (!productId) {
+                return res.status(400).json({ message: 'Product ID is required' });
+            }
+
             // Get product to calculate price
             const product = await Product.findById(productId);
             if (!product) {
                 return res.status(404).json({ message: 'Product not found' });
+            }
+
+            // Validate size for drinks
+            if (product.type === 'drink' && !size) {
+                return res.status(400).json({ message: 'Size is required for drinks' });
             }
 
             let cart;
@@ -62,21 +72,26 @@ const cartController = {
                 }
             }
 
-            // Calculate total price
-            const totalPrice = calculateTotalPrice(product, quantity, size, addOns);
+            try {
+                // Calculate total price
+                const totalPrice = calculateTotalPrice(product, quantity, size, addOns);
 
-            // Add item to cart
-            cart.items.push({
-                product: productId,
-                quantity,
-                size,
-                addOns,
-                totalPrice
-            });
+                // Add item to cart
+                cart.items.push({
+                    product: productId,
+                    quantity,
+                    size,
+                    addOns,
+                    totalPrice
+                });
 
-            await cart.save();
-            await cart.populate('items.product');
-            res.json(cart);
+                await cart.save();
+                await cart.populate('items.product');
+                res.json(cart);
+            } catch (priceError) {
+                console.error('Error calculating price:', priceError);
+                return res.status(400).json({ message: priceError.message });
+            }
         } catch (error) {
             console.error('Error adding to cart:', error);
             res.status(500).json({ message: 'Error adding to cart', error: error.message });
@@ -88,6 +103,10 @@ const cartController = {
         try {
             const { itemId, quantity } = req.body;
             
+            if (!itemId || !quantity) {
+                return res.status(400).json({ message: 'Item ID and quantity are required' });
+            }
+
             const cart = await Cart.findOne({ user: req.user._id });
             if (!cart) {
                 return res.status(404).json({ message: 'Cart not found' });
@@ -98,17 +117,25 @@ const cartController = {
                 return res.status(404).json({ message: 'Cart item not found' });
             }
 
-            // Calculate new total price
-            const product = await Product.findById(item.product);
-            const totalPrice = calculateTotalPrice(product, quantity, item.size, item.addOns);
+            try {
+                // Calculate new total price
+                const product = await Product.findById(item.product);
+                if (!product) {
+                    return res.status(404).json({ message: 'Product not found' });
+                }
+                const totalPrice = calculateTotalPrice(product, quantity, item.size, item.addOns);
 
-            item.quantity = quantity;
-            item.totalPrice = totalPrice;
+                item.quantity = quantity;
+                item.totalPrice = totalPrice;
 
-            await cart.save();
-            await cart.populate('items.product');
+                await cart.save();
+                await cart.populate('items.product');
 
-            res.json(cart);
+                res.json(cart);
+            } catch (priceError) {
+                console.error('Error calculating price:', priceError);
+                return res.status(400).json({ message: priceError.message });
+            }
         } catch (error) {
             console.error('Error updating cart:', error);
             res.status(500).json({ message: 'Error updating cart', error: error.message });
@@ -120,6 +147,10 @@ const cartController = {
         try {
             const { itemId } = req.params;
             
+            if (!itemId) {
+                return res.status(400).json({ message: 'Item ID is required' });
+            }
+
             const cart = await Cart.findOne({ user: req.user._id });
             if (!cart) {
                 return res.status(404).json({ message: 'Cart not found' });
@@ -174,7 +205,8 @@ const cartController = {
             await userCart.populate('items.product');
             res.json(userCart);
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            console.error('Error merging cart:', error);
+            res.status(500).json({ message: 'Error merging cart', error: error.message });
         }
     }
 };

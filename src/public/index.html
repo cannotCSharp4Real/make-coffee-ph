@@ -360,12 +360,41 @@
         </div>
     </div>
 
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>My Profile</h2>
+            <div class="profile-card">
+                <div class="profile-info">
+                    <div class="profile-field">
+                        <label>Email</label>
+                        <p id="userEmail"></p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Username</label>
+                        <p id="userName"></p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Account Type</label>
+                        <p id="userRole"></p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Member Since</label>
+                        <p id="memberSince"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/products.js"></script>
     <script src="/js/cart.js"></script>
     <script src="/js/orders.js"></script>
+    <script src="/js/profile.js"></script>
     <script>
         // Keep existing menu-related JavaScript
         let menuItems = [];

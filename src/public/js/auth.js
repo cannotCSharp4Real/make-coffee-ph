@@ -197,12 +197,26 @@ function updateAuthUI(isAuthenticated, user = null) {
     if (isAuthenticated && user) {
         if (user.role === 'admin') {
             authButtons.innerHTML = `
-                <button class="button button-secondary" onclick="location.href='/admin.html'">Admin Dashboard</button>
-                <button class="button button-primary" onclick="handleLogout()">Logout</button>
+                <div class="dropdown">
+                    <button class="button button-secondary dropdown-toggle">Account</button>
+                    <div class="dropdown-content">
+                        <a href="/profile.html">View Profile</a>
+                        <a href="/admin.html">Admin Dashboard</a>
+                        <a href="#" onclick="openModal('orderHistoryModal')">Order History</a>
+                        <a href="#" onclick="handleLogout()">Logout</a>
+                    </div>
+                </div>
             `;
         } else {
             authButtons.innerHTML = `
-                <button class="button button-primary" onclick="handleLogout()">Logout</button>
+                <div class="dropdown">
+                    <button class="button button-secondary dropdown-toggle">Account</button>
+                    <div class="dropdown-content">
+                        <a href="/profile.html">View Profile</a>
+                        <a href="#" onclick="openModal('orderHistoryModal')">Order History</a>
+                        <a href="#" onclick="handleLogout()">Logout</a>
+                    </div>
+                </div>
             `;
         }
     } else {

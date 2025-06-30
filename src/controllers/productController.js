@@ -1,5 +1,6 @@
 const Product = require('../models/product.js');
 
+// Store SSE clients
 let clients = new Set();
 
 const productController = {
@@ -15,8 +16,11 @@ const productController = {
 
       const products = await Product.find(filter);
       res.json(products);
-      productController.notifyClients();
+      
+      // Notify clients of the update
+      productController.notifyClients('update');
     } catch (error) {
+      console.error('Error fetching products:', error);
       res.status(500).json({ message: 'Error fetching products', error: error.message });
     }
   },
@@ -29,8 +33,8 @@ const productController = {
         return res.status(404).json({ message: 'Product not found' });
       }
       res.json(product);
-      productController.notifyClients();
     } catch (error) {
+      console.error('Error fetching product:', error);
       res.status(500).json({ message: 'Error fetching product', error: error.message });
     }
   },
@@ -38,22 +42,18 @@ const productController = {
   // Create new product (admin only)
   createProduct: async (req, res) => {
     try {
-      console.log('Received product data:', req.body);
-      
       const product = new Product(req.body);
-      console.log('Created product instance:', product);
-      
       await product.save();
-      console.log('Product saved successfully');
+      res.status(201).json(product);
       
-      res.status(201).json({ message: 'Product created successfully', product });
-      productController.notifyClients();
+      // Notify clients of the update
+      productController.notifyClients('create', product);
     } catch (error) {
       console.error('Error creating product:', error);
       res.status(400).json({ 
         message: 'Error creating product', 
         error: error.message,
-        details: error.errors // This will show validation errors if any
+        details: error.errors
       });
     }
   },
@@ -71,9 +71,12 @@ const productController = {
         return res.status(404).json({ message: 'Product not found' });
       }
       
-      res.json({ message: 'Product updated successfully', product });
-      productController.notifyClients();
+      res.json(product);
+      
+      // Notify clients of the update
+      productController.notifyClients('update', product);
     } catch (error) {
+      console.error('Error updating product:', error);
       res.status(400).json({ message: 'Error updating product', error: error.message });
     }
   },
@@ -88,14 +91,18 @@ const productController = {
       }
       
       res.json({ message: 'Product deleted successfully', product });
-      productController.notifyClients();
+      
+      // Notify clients of the update
+      productController.notifyClients('delete', product);
     } catch (error) {
+      console.error('Error deleting product:', error);
       res.status(500).json({ message: 'Error deleting product', error: error.message });
     }
   },
 
   // Handle SSE connections
   handleSSE: (req, res) => {
+    // Set headers for SSE
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
@@ -103,21 +110,57 @@ const productController = {
     });
 
     // Send initial connection message
-    res.write('data: connected\n\n');
+    const data = JSON.stringify({ type: 'connected' });
+    res.write(`data: ${data}\n\n`);
+
+    // Create a client object with the response and a ping interval
+    const clientId = Date.now();
+    const client = {
+      id: clientId,
+      res,
+      pingInterval: setInterval(() => {
+        if (!res.finished) {
+          const pingData = JSON.stringify({ type: 'ping', timestamp: Date.now() });
+          res.write(`data: ${pingData}\n\n`);
+        }
+      }, 30000) // Send ping every 30 seconds
+    };
 
     // Add client to Set
-    clients.add(res);
+    clients.add(client);
 
-    // Remove client when connection closes
+    // Handle client disconnect
     req.on('close', () => {
-      clients.delete(res);
+      clearInterval(client.pingInterval);
+      clients.delete(client);
+    });
+
+    // Handle errors
+    res.on('error', (error) => {
+      console.error('SSE error:', error);
+      clearInterval(client.pingInterval);
+      clients.delete(client);
     });
   },
 
   // Notify all clients of changes
-  notifyClients: () => {
+  notifyClients: (eventType, data = null) => {
+    const eventData = JSON.stringify({
+      type: eventType,
+      timestamp: Date.now(),
+      data
+    });
+
     clients.forEach(client => {
-      client.write('data: update\n\n');
+      try {
+        if (!client.res.finished) {
+          client.res.write(`data: ${eventData}\n\n`);
+        }
+      } catch (error) {
+        console.error('Error sending SSE update:', error);
+        clearInterval(client.pingInterval);
+        clients.delete(client);
+      }
     });
   }
 };

@@ -40,9 +40,19 @@ function handleLogout() {
 }
 
 // View profile function
-function viewProfile() {
-    // Implement profile view functionality
-    console.log('View profile clicked');
+async function viewProfile() {
+    // Hide the profile dropdown
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (profileDropdown) {
+        profileDropdown.classList.remove('show');
+    }
+
+    // Show the profile modal
+    const profileModal = document.getElementById('profileModal');
+    if (profileModal) {
+        profileModal.style.display = 'block';
+        await loadUserProfile(); // This function is defined in profile.js
+    }
 }
 
 // View orders function

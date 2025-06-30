@@ -40,7 +40,7 @@ const authController = {
       // Generate JWT token
       const token = jwt.sign(
         { 
-          userId: newUser._id, 
+          _id: newUser._id,  // Use _id consistently
           role: newUser.role 
         },
         process.env.JWT_SECRET || 'fallback-secret-key', // Add fallback secret key
@@ -86,8 +86,8 @@ const authController = {
 
       // Generate JWT token
       const token = jwt.sign(
-        { userId: user._id, role: user.role },
-        process.env.JWT_SECRET,
+        { _id: user._id, role: user.role },  // Use _id consistently
+        process.env.JWT_SECRET || 'fallback-secret-key',  // Add fallback secret key
         { expiresIn: '24h' }
       );
 
@@ -109,12 +109,14 @@ const authController = {
   // Get current user profile
   getProfile: async (req, res) => {
     try {
-      const user = await User.findById(req.user.userId).select('-password');
+      const userId = req.user._id;  // Use _id consistently
+      const user = await User.findById(userId).select('-password');
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
       res.json(user);
     } catch (error) {
+      console.error('Profile fetch error:', error);
       res.status(500).json({ message: 'Server error', error: error.message });
     }
   }
